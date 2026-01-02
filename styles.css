@@ -1,0 +1,20 @@
+/*
+
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
+
+If your plugin does not need CSS, delete this file.
+
+*/
+
+
+.logbook-time {
+    float: right;
+    opacity: 0.5;
+
+    transition: 0.25s ease all;
+}
+
+.logbook-time:hover {
+    opacity: 1;
+}

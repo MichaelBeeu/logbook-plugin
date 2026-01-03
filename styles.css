@@ -13,6 +13,8 @@ If your plugin does not need CSS, delete this file.
     opacity: 0.5;
 
     transition: 0.25s ease all;
+
+    margin: 0;
 }
 
 .logbook-time:hover {

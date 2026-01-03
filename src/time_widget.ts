@@ -21,7 +21,7 @@ export default class TimeWidget extends WidgetType
     toDOM(view: EditorView): HTMLElement {
         const openClock = this.#logbook.getOpenClock();
 
-        const el = document.createElement('span');
+        const el = document.createElement('pre');
         el.classList.add('logbook-time');
         el.textContent = this.#getTotalDuration();
 
@@ -54,7 +54,7 @@ export default class TimeWidget extends WidgetType
             icon = "⌛";
         }
 
-        return `${icon} ` + formatLogbookDuration(duration);
+        return formatLogbookDuration(duration) + ` ${icon}`;
     }
 
     #clearInterval() {

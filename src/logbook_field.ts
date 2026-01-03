@@ -19,7 +19,7 @@ export const logbookField = StateField.define<DecorationSet>({
 
         const parser = new LogbookParser();
 
-        const books = parser.parse(doc);
+        const books = parser.parseAll(doc);
 
         for (const book of books) {
             const from = book.from - 1;

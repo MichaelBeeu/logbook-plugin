@@ -1,5 +1,8 @@
 import { ChangeSet, ChangeSpec, Text, Transaction, TransactionSpec } from "@codemirror/state";
-import { findWorkflowStatus, getWorkflowState, getWorkflowStates, getWorkflowStatus } from "task";
+import { moment } from "obsidian";
+import { Logbook, LogbookLine } from "logbook";
+import LogbookParser from "logbook_parser";
+import { findWorkflowState, getWorkflowState, getWorkflowStates, getWorkflowStatus, WorkflowState } from "task";
 import { isRangeOverlap } from "utils";
 
 export function logbookTransactionFilter(
@@ -15,8 +18,6 @@ export function logbookTransactionFilter(
 
     // Get the new document.
     const newDoc = transaction.newDoc;
-    let newDocLength = newDoc.length;
-    let changeOffset = 0;
 
     // Get the list of valid states.
     const workflowStates = getWorkflowStates();
@@ -44,9 +45,11 @@ export function logbookTransactionFilter(
 
             const newState = state.currentState ?? '';
 
+            let stateDesc: WorkflowState|undefined;
+
             // Update the state if the checkbox value has changed.
-            if (state.checkboxValueRange && state.currentState && isRangeOverlap(state.checkboxValueRange.from, state.checkboxValueRange.to, fromB + changeOffset, toB + changeOffset)) {
-                const stateDesc = findWorkflowStatus((s) => s.checkbox === state.checkboxValue);
+            if (state.checkboxValueRange && state.currentState && isRangeOverlap(state.checkboxValueRange.from, state.checkboxValueRange.to, fromB, toB)) {
+                stateDesc = findWorkflowState((s) => s.checkbox === state.checkboxValue);
                 if (stateDesc) {
                     changes.push({
                         from: state.currentStateRange?.from ?? line.from,
@@ -61,11 +64,11 @@ export function logbookTransactionFilter(
             }
 
             // Update the checkbox if the state value has changed.
-            if (state.currentStateRange && isRangeOverlap(state.currentStateRange.from, state.currentStateRange.to, fromB + changeOffset, toB + changeOffset)) {
+            if (state.currentStateRange && isRangeOverlap(state.currentStateRange.from, state.currentStateRange.to, fromB, toB)) {
                 // Is this a valid state?
                 if (workflowStates.contains(newState)) {
                     // Get state data.
-                    const stateDesc = getWorkflowState(newState);
+                    stateDesc = getWorkflowState(newState);
                     // Get checkbox value.
                     const checkbox = stateDesc?.checkbox;
 
@@ -99,6 +102,17 @@ export function logbookTransactionFilter(
             } else {
                 console.log("skipping due to lack of overlap");
             }
+
+            if (stateDesc) {
+                console.log('updating logbook');
+                const logbookChanges = updateLogbook(
+                    newDoc,
+                    line.number,
+                    stateDesc
+                );
+
+                changes = changes.concat(logbookChanges);
+            }
         }
     );
 
@@ -112,6 +126,71 @@ export function logbookTransactionFilter(
     }
 
     return transactions;
+}
+
+function updateLogbook(
+    doc: Text,
+    lineNumber: number,
+    state: WorkflowState
+): ChangeSpec[]
+{
+    // The logbook should start directly below the current line.
+    const logbookFrom = lineNumber + 1;
+
+    const logbookParser = new LogbookParser();
+
+    // Parse the logbook, or create a new one.
+    let logbook = logbookParser.parse(doc, logbookFrom);
+    
+    let outputPrefix = '';
+    
+    if (!logbook) {
+        console.log('no logbook found. creating');
+        let position = doc.length;
+
+        if (logbookFrom <= doc.lines) {
+            const line = doc.line(logbookFrom);
+            position = line.from;
+        } else {
+            outputPrefix = "\n";
+        }
+        logbook = new Logbook(position, position);
+    }
+
+    console.log('logbook', logbook);
+
+    const openClock = logbook.getOpenClock();
+    if (state.clockState === 'open') {
+        console.log('clock should be open');
+        if (!openClock) {
+            console.log('clock is not open. opening...');
+            logbook.addLine(new LogbookLine(moment()));
+        } else {
+            console.log('clock is open');
+        }
+    } else if (state.clockState === 'closed') {
+        console.log('clock should be closed');
+        if (openClock) {
+            console.log('clock is open. closing');
+            openClock.endTime = moment();
+        } else {
+            console.log('clock is closed');
+        }
+    }
+
+    console.log('logbook', logbook);
+
+    const newBlock = outputPrefix + logbook.toString();
+
+    console.log('newBlock', newBlock);
+
+    return [
+        {
+            from: logbook.from,
+            to: logbook.to,
+            insert: newBlock,
+        }
+    ];
 }
 
 // export function logbookTransactionFilter(

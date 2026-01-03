@@ -55,8 +55,8 @@ const taskWorkflow: Workflow = {
     },
 };
 
-export function getWorkflowState(state: string): WorkflowState|null {
-    return taskWorkflow[state] ?? null;
+export function getWorkflowState(state: string): WorkflowState|undefined {
+    return taskWorkflow[state];
 }
 
 export function getWorkflowStates(): string[] {
@@ -71,7 +71,7 @@ export function getWorkflowRegex(): RegExp {
     return new RegExp(r, 'gd');
 }
 
-export function findWorkflowStatus(
+export function findWorkflowState(
     predicate: (status: WorkflowState) => boolean
 ): WorkflowState|undefined
 {

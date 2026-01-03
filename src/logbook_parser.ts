@@ -15,26 +15,15 @@ export default class LogbookParser {
      * @param start 
      * @returns 
      */
-    parse(doc: Text, start: number = 1, end: number|undefined = undefined): Logbook[]
+    parse(doc: Text, start: number = 1, end: number|undefined = undefined): Logbook|undefined
     {
-        let result: Logbook[] = [];
+        let result: Logbook|undefined = undefined;
 
         const logbookDrawerRe = /^\s*?:LOGBOOK:$/i;
         const drawerEndRe = /^\s*?:END:$/i;
 
         let from = start;
         end ??= doc.lines;
-
-        for(let n = start; n > 0; --n) {
-            const line = doc.line(n);
-            const { text } = line;
-            const isLogbookDrawer = text.match(logbookDrawerRe) !== null;
-            // We found a logbook; start here.
-            if (isLogbookDrawer) {
-                from = n;
-                break;
-            }
-        }
 
         // Start in scan mode.
         let mode: ParseMode = 'scan';
@@ -57,6 +46,9 @@ export default class LogbookParser {
 
                     mode = 'drawer';
                     parentLine = doc.line(n - 1);
+                } else {
+                    // Not a logbook, so exit.
+                    break;
                 }
             } else if (mode == 'drawer') {
                 // If we're in a drawer, check for the end.
@@ -65,16 +57,39 @@ export default class LogbookParser {
                 if (isEnd) {
                     pendingLogbook.to = line.to;
 
-                    result.push(pendingLogbook);
-                    pendingLogbook = new Logbook();
+                    result = pendingLogbook;
 
-                    mode = 'scan';
+                    break;
                 } else {
                     // not the end, then assume it's a clock line.
                     const clock = this.#parseClock(line);
                     if (clock !== undefined) {
                         pendingLogbook.addLine(clock);
                     }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    parseAll(doc: Text, start: number = 1, end: number|undefined = undefined): Logbook[]
+    {
+        let result: Logbook[] = [];
+
+        const logbookDrawerRe = /^\s*?:LOGBOOK:$/i;
+
+        end = Math.min(doc.lines, end ?? doc.lines);
+
+        for(let n = start; n <= end; ++n) {
+            const line = doc.line(n);
+            const { text } = line;
+
+            if (text.match(logbookDrawerRe) !== null) {
+                const logbook = this.parse(doc, n);
+
+                if (logbook) {
+                    result.push(logbook);
                 }
             }
         }

@@ -5,6 +5,11 @@ import { toggleClock } from 'commands';
 import { getWorkflowRegex } from 'task';
 import { EditorState } from '@codemirror/state';
 import { logbookTransactionFilter } from 'editor';
+import { foldable, foldEffect, foldService, unfoldEffect } from '@codemirror/language';
+import { EditorView, ViewUpdate } from '@codemirror/view';
+import { logbookFoldService } from 'fold';
+import { logbookViewUpdateListener } from 'updateListener';
+
 
 // Remember to rename these classes and interfaces!
 
@@ -23,6 +28,8 @@ export default class MyPlugin extends Plugin {
 		// const editorView = markdownView?.editor.cm as EditorView;
 
 		this.registerEditorExtension([
+			logbookFoldService,
+			logbookViewUpdateListener,
 			logbookField,
 			EditorState.transactionFilter.of(logbookTransactionFilter),
 		]);

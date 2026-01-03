@@ -1,9 +1,30 @@
+import { foldService } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 
-export function createFoldService() {
-    return (editor: EditorState, from: number, to: number): {from: number, to: number}|null => {
-        console.log('fold', from, to);
+export const logbookFoldService = foldService.of(
+	(state: EditorState, from: number, to: number): {from: number, to: number}|null => {
+		const { doc } = state;
+		const { lines } = doc;
+		const lineStart = doc.lineAt(from);
 
-        return null;
-    }
-}
+		const { text: startText } = lineStart;
+
+		if (startText.match(/^\s*:LOGBOOK:$/) === null) {
+			return null;
+		}
+
+		for (let n = lineStart.number; n <= lines; ++n) {
+			const line = doc.line(n);
+			const { text } = line;
+
+			if (text.match(/^\s*:END:$/) !== null) {
+				return {
+					from: lineStart.from,
+					to: line.to,
+				};
+			}
+		}
+
+		return null;
+	}
+);

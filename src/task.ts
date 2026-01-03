@@ -83,6 +83,12 @@ export function getWorkflowStatus(
     offset: number
 ): WorkflowStatus|null
 {
+    const logbookMatch = line.match(/^\s*(:LOGBOOK:$|CLOCK:|:END:$)/);
+
+    if (logbookMatch !== null) {
+        return null;
+    }
+
     const regex = getWorkflowRegex();
 
     const match = regex.exec(line) as RegExpMatchArrayWithIndices;

@@ -1,9 +1,15 @@
-import { ChangeSet, ChangeSpec, Text, Transaction, TransactionSpec } from "@codemirror/state";
+import { ChangeSet, ChangeSpec, StateEffect, Text, Transaction, TransactionSpec } from "@codemirror/state";
 import { moment } from "obsidian";
 import { Logbook, LogbookLine } from "logbook";
 import LogbookParser from "logbook_parser";
 import { findWorkflowState, getWorkflowState, getWorkflowStates, getWorkflowStatus, WorkflowState } from "task";
 import { isRangeOverlap } from "utils";
+import { foldEffect } from "@codemirror/language";
+
+interface LogbookUpdateResult {
+    changes: ChangeSpec[];
+    effects: StateEffect<any>[];
+};
 
 export function logbookTransactionFilter(
     transaction: Transaction
@@ -13,6 +19,7 @@ export function logbookTransactionFilter(
         transaction,
     ];
     let changes: ChangeSpec[] = [];
+    let effects: StateEffect<any>[] = [];
 
     console.log('logbookTransaction Filter', transaction);
 
@@ -105,13 +112,14 @@ export function logbookTransactionFilter(
 
             if (stateDesc) {
                 console.log('updating logbook');
-                const logbookChanges = updateLogbook(
+                const {changes: logbookChanges, effects: logbookEffects } = updateLogbook(
                     newDoc,
                     line.number,
                     stateDesc
                 );
 
                 changes = changes.concat(logbookChanges);
+                effects = effects.concat(logbookEffects);
             }
         }
     );
@@ -121,6 +129,7 @@ export function logbookTransactionFilter(
 
         transactions.push({
             changes: changeSet,
+            effects,
             sequential: true,
         });
     }
@@ -132,20 +141,25 @@ function updateLogbook(
     doc: Text,
     lineNumber: number,
     state: WorkflowState
-): ChangeSpec[]
+): LogbookUpdateResult
 {
     // The logbook should start directly below the current line.
     const logbookFrom = lineNumber + 1;
 
     const logbookParser = new LogbookParser();
 
+    const effects: StateEffect<any>[] = [];
+    let newLogbook = false;
+
     // Parse the logbook, or create a new one.
     let logbook = logbookParser.parse(doc, logbookFrom);
     
     let outputPrefix = '';
+    let outputSuffix = '';
     
     if (!logbook) {
         console.log('no logbook found. creating');
+        newLogbook = true;
         let position = doc.length;
 
         if (logbookFrom <= doc.lines) {
@@ -155,6 +169,7 @@ function updateLogbook(
             outputPrefix = "\n";
         }
         logbook = new Logbook(position, position);
+        outputSuffix = "\n";
     }
 
     console.log('logbook', logbook);
@@ -180,17 +195,29 @@ function updateLogbook(
 
     console.log('logbook', logbook);
 
-    const newBlock = outputPrefix + logbook.toString();
+    const newBlock = outputPrefix + logbook.toString() + outputSuffix;
 
     console.log('newBlock', newBlock);
 
-    return [
-        {
-            from: logbook.from,
-            to: logbook.to,
-            insert: newBlock,
-        }
-    ];
+    // if (newLogbook) {
+    //     effects.push(
+    //         foldEffect.of({
+    //             from: logbook.from + 6,
+    //             to: logbook.from + newBlock.length + 6,
+    //         })
+    //     );
+    // }
+
+    return {
+        changes: [
+            {
+                from: logbook.from,
+                to: logbook.to,
+                insert: newBlock,
+            },
+        ],
+        effects,
+    };
 }
 
 // export function logbookTransactionFilter(

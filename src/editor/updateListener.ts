@@ -1,11 +1,11 @@
 import { foldable, foldEffect, unfoldEffect } from "@codemirror/language";
 import { Extension, StateEffect } from "@codemirror/state";
 import { EditorView, ViewUpdate } from "@codemirror/view";
-import LogbookPlugin from "main";
+import LogbookPluginInterface from "main";
 import { isRangeOverlap } from "utils";
 
 export function logbookViewUpdateListener(
-    plugin: LogbookPlugin,
+    plugin: LogbookPluginInterface,
 ): Extension {
     return EditorView.updateListener.of(
         (view: ViewUpdate) => {

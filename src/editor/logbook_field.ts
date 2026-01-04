@@ -1,12 +1,12 @@
 import { StateField, Transaction, Extension, RangeSetBuilder, Line } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { TextParseAdapter } from 'logbook/parse_adapter';
-import LogbookParser from 'logbook_parser';
-import LogbookPlugin from 'main';
-import TimeWidget from 'time_widget';
+import LogbookParser from 'logbook/logbook_parser';
+import LogbookPluginInterface from 'main';
+import TimeWidget from 'widgets/time_widget';
 
 export function logbookField(
-    plugin: LogbookPlugin
+    plugin: LogbookPluginInterface
 ): Extension {
     return StateField.define<DecorationSet>({
         create(state): DecorationSet {

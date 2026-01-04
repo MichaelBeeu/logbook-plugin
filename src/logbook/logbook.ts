@@ -114,7 +114,6 @@ export class Logbook {
 
     addLine(line: LogbookLine): this {
         this.#lines.push(line);
-        // console.log("adding line", this.#lines);
         return this;
     }
 
@@ -129,13 +128,6 @@ export class Logbook {
             },
             moment.duration(0)
         );
-        // let totalDuration = moment.duration(0);
-
-        // for (const line of this.lines) {
-        //     totalDuration.add(line.duration);
-        // }
-
-        // return totalDuration;
     }
 
     hasOpenClock(): boolean {

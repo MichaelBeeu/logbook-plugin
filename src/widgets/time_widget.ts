@@ -1,5 +1,5 @@
 import { EditorView, WidgetType } from "@codemirror/view";
-import { Logbook, LogbookLine } from "logbook";
+import { Logbook } from "logbook/logbook";
 import { moment } from "obsidian";
 import { formatLogbookDuration } from "utils";
 

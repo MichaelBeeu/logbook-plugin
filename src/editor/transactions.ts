@@ -1,10 +1,10 @@
 import { ChangeSet, ChangeSpec, EditorState, Extension, StateEffect, Text, Transaction, TransactionSpec } from "@codemirror/state";
 import { moment } from "obsidian";
-import { Logbook, LogbookLine } from "logbook";
-import LogbookParser from "logbook_parser";
-import { findWorkflowState, getWorkflowState, getWorkflowStates, getWorkflowStatus, WorkflowState } from "task";
+import { Logbook, LogbookLine } from "logbook/logbook";
+import LogbookParser from "logbook/logbook_parser";
+import { findWorkflowState, getWorkflowState, getWorkflowStates, getWorkflowStatus, WorkflowState } from "tasks/task";
 import { isRangeOverlap } from "utils";
-import LogbookPlugin from "main";
+import LogbookPluginInterface from "main";
 import { TextParseAdapter } from "logbook/parse_adapter";
 
 interface LogbookUpdateResult {
@@ -13,7 +13,7 @@ interface LogbookUpdateResult {
 };
 
 export function logbookTransactionFilter(
-    plugin: LogbookPlugin
+    plugin: LogbookPluginInterface
 ): Extension {
     return EditorState.transactionFilter.of(
         function(transaction: Transaction): TransactionSpec|readonly TransactionSpec[]
@@ -145,7 +145,7 @@ export function logbookTransactionFilter(
 
 
 function updateLogbook(
-    plugin: LogbookPlugin,
+    plugin: LogbookPluginInterface,
     doc: Text,
     lineNumber: number,
     state: WorkflowState

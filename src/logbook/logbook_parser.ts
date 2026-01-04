@@ -1,5 +1,5 @@
 import { Line, Text } from '@codemirror/state';
-import { Logbook, LogbookLine } from 'logbook';
+import { Logbook, LogbookLine } from 'logbook/logbook';
 import { ParseAdapterInterface } from 'logbook/parse_adapter';
 import { moment } from 'obsidian';
 

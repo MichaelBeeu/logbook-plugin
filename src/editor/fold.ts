@@ -1,9 +1,9 @@
 import { foldService } from "@codemirror/language";
 import { EditorState, Extension } from "@codemirror/state";
-import LogbookPlugin from "main";
+import LogbookPluginInterface from "main";
 
 export function logbookFoldService(
-    plugin: LogbookPlugin
+    plugin: LogbookPluginInterface
 ): Extension {
     return foldService.of(
         (state: EditorState, from: number, to: number): {from: number, to: number}|null => {

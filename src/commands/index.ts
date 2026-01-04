@@ -1,10 +1,10 @@
 import { EditorView } from "@codemirror/view";
-import LogbookPlugin from "main";
+import LogbookPluginInterface from "main";
 import { Editor, EditorChange, MarkdownView} from "obsidian";
-import { getWorkflowStatus, proceedWorkflow } from "task";
+import { getWorkflowStatus, proceedWorkflow } from "tasks/task";
 
 export function toggleClock(
-    plugin: LogbookPlugin
+    plugin: LogbookPluginInterface
 ) {
     return function (editor: Editor, view: MarkdownView) {
         // @ts-expect-error, not typed
@@ -67,7 +67,7 @@ export function toggleClock(
 };
 
 export function closeAllOpenClocks(
-    plugin: LogbookPlugin
+    plugin: LogbookPluginInterface
 ) {
     return function (editor: Editor, view: MarkdownView) {
         plugin.closeAllLogbookFiles();

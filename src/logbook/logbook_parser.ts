@@ -66,6 +66,9 @@ export default class LogbookParser {
                     const clock = this.#parseClock(line);
                     if (clock !== undefined) {
                         pendingLogbook.addLine(clock);
+                    } else {
+                        console.warn("Invalid clock line!", line);
+                        return undefined;
                     }
                 }
             }
@@ -100,7 +103,7 @@ export default class LogbookParser {
 
     #parseClock(line: Line): LogbookLine|undefined {
         const { text, from } = line;
-        const clockRe = /^CLOCK:\s*\[([^\]]+)\](?:--\[([^\]]+)\]\s*=>\s*(\d+:\d{2}(?::\d{2})?))?$/mi
+        const clockRe = /^CLOCK:\s*\[([^\]]+)\](?:--\[([^\]]+)\](?:\s*=>\s*(\d+:\d{2}(?::\d{2})?)?)?)?$/mi
         let result: LogbookLine|undefined = undefined;
 
         const clockData = text.match(clockRe);

@@ -1,5 +1,6 @@
 import { Line, Text } from '@codemirror/state';
 import { Logbook, LogbookLine } from 'logbook';
+import { ParseAdapterInterface } from 'logbook/parse_adapter';
 import { moment } from 'obsidian';
 
 type ParseMode = 'scan'|'drawer';
@@ -15,7 +16,7 @@ export default class LogbookParser {
      * @param start 
      * @returns 
      */
-    parse(doc: Text, start: number = 1, end: number|undefined = undefined): Logbook|undefined
+    parse(doc: ParseAdapterInterface, start: number = 1, end: number|undefined = undefined): Logbook|undefined
     {
         let result: Logbook|undefined = undefined;
 
@@ -73,7 +74,7 @@ export default class LogbookParser {
         return result;
     }
 
-    parseAll(doc: Text, start: number = 1, end: number|undefined = undefined): Logbook[]
+    parseAll(doc: ParseAdapterInterface, start: number = 1, end: number|undefined = undefined): Logbook[]
     {
         let result: Logbook[] = [];
 
@@ -144,15 +145,11 @@ export default class LogbookParser {
             return undefined;
         }
 
-        // const _hours = parseInt(parts[0] ?? '0');
-        // const hours = Math.floor(_hours % 24);
         const hours = parseInt(parts[0] ?? '0');
         const minutes = parseInt(parts[1] ?? '0');
         const seconds = parseInt(parts[2] ?? '0');
-        // const days = Math.floor(hours / 24);
 
         return moment.duration({
-            // days,
             hours,
             minutes,
             seconds

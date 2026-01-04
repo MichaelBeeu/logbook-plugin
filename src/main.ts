@@ -1,91 +1,127 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
+import {App, Editor, MarkdownView, Modal, Notice, Plugin, TFile, Tasks, moment} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
 import { logbookField } from 'logbook_field';
-import { toggleClock } from 'commands';
-import { getWorkflowRegex } from 'task';
+import { closeAllOpenClocks, toggleClock } from 'commands';
 import { EditorState } from '@codemirror/state';
 import { logbookTransactionFilter } from 'editor';
 import { foldable, foldEffect, foldService, unfoldEffect } from '@codemirror/language';
 import { EditorView, ViewUpdate } from '@codemirror/view';
 import { logbookFoldService } from 'fold';
 import { logbookViewUpdateListener } from 'updateListener';
+import { StringParseAdapter } from 'logbook/parse_adapter';
+import LogbookParser from 'logbook_parser';
+import { getWorkflowStatus } from 'task';
 
 
 // Remember to rename these classes and interfaces!
 
-export default class MyPlugin extends Plugin {
+export default class LogbookPlugin extends Plugin {
 	settings: MyPluginSettings;
+
+	logbookFiles: Set<TFile> = new Set();
 
 	async onload() {
 		await this.loadSettings();
 
-		const workflowRegex = getWorkflowRegex();
-
-		console.log('workflow regex', workflowRegex);
-
-		// const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		// // @ts-expect-error. not typed
-		// const editorView = markdownView?.editor.cm as EditorView;
-
-		this.registerEditorExtension([
-			logbookFoldService,
-			logbookViewUpdateListener,
-			logbookField,
-			EditorState.transactionFilter.of(logbookTransactionFilter),
-		]);
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (_evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
+		const {
+			app: {
+				vault
 			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, _view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
+		} = this;
+
+		const file = vault.getFileByPath('Untitled 4.md');
+		if (file) {
+			console.log('file', file);
+			vault.read(file)
+				.then((content: string) => {
+					// console.log('content', content);
+
+					const pa = new StringParseAdapter(content);
+					const lp = new LogbookParser();
+
+					for (let n = pa.lines; n >= 1; --n) {
+						const line = pa.line(n);
+						const { text } = line;
+
+						const workflowStatus = getWorkflowStatus(text, line.from);
+
+						if (workflowStatus && n > 1) {
+							console.log('get line', n+1);
+							const book = lp.parse(pa, n + 1);
+
+							if (book) {
+								console.log('got book');
+								const openClock = book.getOpenClock();
+								if (openClock) {
+									console.log('closing open clock');
+									openClock.endTime = moment();
+
+									const block = book.toString();
+									const from = book.from;
+									const to = book.to;
+
+									const start = content.substring(0, from);
+									const end = content.substring(to);
+
+									console.log('replacing', from, to, start, end);
+
+									content = start + block + end;
+								} else {
+									console.log('no open clock');
+								}
+							}
+
+							if (workflowStatus.currentState && workflowStatus.currentStateRange) {
+								const start = content.substring(0, workflowStatus.currentStateRange.from);
+								const end = content.substring(workflowStatus.currentStateRange.to);
+
+								content = start + 'TODO' + end;
+							}
+						}
 					}
 
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			}
-		});
+					// const lp = new LogbookParser();
+					// const books = lp.parseAll(pa);
+
+					// console.log('lines', pa.lines, books);
+
+					// const booksRev = books.reverse();
+					// for (const book of booksRev) {
+					// 	const openClock = book.getOpenClock();
+					// 	if (openClock) {
+					// 		openClock.endTime = moment();
+					// 	}
+
+					// 	const block = book.toString();
+					// 	const from = book.from;
+					// 	const to = book.to;
+
+					// 	const start = content.substring(0, from);
+					// 	const end = content.substring(to);
+
+					// 	console.log('replacing', from, to, start, end);
+
+					// 	content = start + block + end;
+					// }
+
+					console.log('new content', content);
+				})
+				.catch(e => console.log(e))
+				;
+		}
+
+
+		this.registerEditorExtension([
+			logbookFoldService(this),
+			logbookViewUpdateListener(this),
+			logbookField(this),
+			logbookTransactionFilter(this),
+		]);
 
 		this.addCommand({
 			id: 'toggle-clock',
 			name: 'Toggle clock',
-			editorCallback: toggleClock,
+			editorCallback: toggleClock(this),
 			hotkeys: [
 				{
 					modifiers: ['Ctrl', 'Shift'],
@@ -94,21 +130,109 @@ export default class MyPlugin extends Plugin {
 			]
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
+		this.addCommand({
+			id: 'close-clocks',
+			name: 'Close all open clocks',
+			editorCallback: closeAllOpenClocks(this),
 		});
 
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		this.app.workspace.on('quit', (tasks: Tasks) => {
+			tasks.add(
+				async () => {
+					await this.closeAllLogbookFiles();
+				}
+			)
+		});
 
+		// This adds a settings tab so the user can configure various aspects of the plugin
+		this.addSettingTab(new SampleSettingTab(this.app, this));
+	}
+
+	addLogbookFile(file: TFile): void {
+		this.logbookFiles.add(file);
+	}
+
+	removeLogbookFile(file: TFile): void {
+		this.logbookFiles.delete(file);
+	}
+
+	async closeAllLogbookFiles(): Promise<void> {
+		const {
+			app: {
+				vault
+			}
+		} = this;
+
+		const promises: Promise<any>[] = [];
+
+		for (const file of this.logbookFiles) {
+			console.log('Cleanup file.', file);
+
+			const promise = vault.read(file)
+				.then((content: string) => {
+					const newContent = this.closeLogbooksInFile(content);
+
+					vault.modify(file, newContent);
+				});
+			
+			promises.push(promise);
+		}
+
+		this.logbookFiles.clear();
+
+		await Promise.all(promises);
+	}
+
+	closeLogbooksInFile(content: string): string {
+		const pa = new StringParseAdapter(content);
+		const lp = new LogbookParser();
+
+		for (let n = pa.lines; n >= 1; --n) {
+			const line = pa.line(n);
+			const { text } = line;
+
+			const workflowStatus = getWorkflowStatus(text, line.from);
+
+			if (workflowStatus) {
+				console.log('get line', n+1);
+				const book = lp.parse(pa, n + 1);
+
+				if (book) {
+					console.log('got book');
+					const openClock = book.getOpenClock();
+					if (openClock) {
+						console.log('closing open clock');
+						openClock.endTime = moment();
+
+						const block = book.toString();
+						const from = book.from;
+						const to = book.to;
+
+						const start = content.substring(0, from);
+						const end = content.substring(to);
+
+						console.log('replacing', from, to, start, end);
+
+						content = start + block + end;
+					} else {
+						console.log('no open clock');
+					}
+				}
+
+				if (workflowStatus.currentState && workflowStatus.currentStateRange) {
+					const start = content.substring(0, workflowStatus.currentStateRange.from);
+					const end = content.substring(workflowStatus.currentStateRange.to);
+
+					content = start + 'TODO' + end;
+				}
+			}
+		}
+
+		return content;
 	}
 
 	onunload() {
+		this.logbookFiles.clear();
 	}
 
 	async loadSettings() {
@@ -117,21 +241,5 @@ export default class MyPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
 	}
 }

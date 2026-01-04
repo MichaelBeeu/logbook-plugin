@@ -1,6 +1,4 @@
-import { NullValue } from "obsidian";
-
-type RegExpMatchArrayWithIndices = RegExpMatchArray & { indices: Array<[number, number]> & { groups: { [key: string]: [number, number]}} };
+import { RegExpMatchArrayWithIndices } from "utils";
 
 type ClockState = 'open'|'closed';
 

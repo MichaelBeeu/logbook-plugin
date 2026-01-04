@@ -1,4 +1,5 @@
 
+export type RegExpMatchArrayWithIndices = RegExpMatchArray & { indices: Array<[number, number]> & { groups: { [key: string]: [number, number]}} };
 
 export function formatLogbookDuration(duration: moment.Duration|undefined): string {
     if (duration === undefined) {

@@ -1,5 +1,7 @@
 import { foldService } from "@codemirror/language";
 import { EditorState, Extension } from "@codemirror/state";
+import LogbookParser from "logbook/logbook_parser";
+import { TextParseAdapter } from "logbook/parse_adapter";
 import LogbookPluginInterface from "main";
 
 export function logbookFoldService(
@@ -17,16 +19,25 @@ export function logbookFoldService(
                 return null;
             }
 
-            for (let n = lineStart.number; n <= lines; ++n) {
-                const line = doc.line(n);
-                const { text } = line;
+            // Grab the text before the line. Look for what looks like code block delimiters.
+            const docBefore = doc.slice(0, lineStart.from).toString();
+            const codeBlocks = docBefore.match(/^```/gm) ?? [];
+            const numCodeBlocks = codeBlocks.length;
 
-                if (text.match(/^\s*:END:$/) !== null) {
-                    return {
-                        from: lineStart.from,
-                        to: line.to,
-                    };
-                }
+            // If there's an odd number of code block markers, then assume we're in a codeblock, and exit.
+            if (numCodeBlocks % 2 === 1) {
+                return null;
+            }
+
+            const parseAdapter = new TextParseAdapter(doc);
+            const parser = new LogbookParser();
+            const book = parser.parse(parseAdapter, lineStart.number);
+
+            if (book) {
+                return {
+                    from: lineStart.from,
+                    to: book.to,
+                };
             }
 
             return null;

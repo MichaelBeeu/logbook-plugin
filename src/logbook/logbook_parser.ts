@@ -82,12 +82,23 @@ export default class LogbookParser {
         let result: Logbook[] = [];
 
         const logbookDrawerRe = /^\s*?:LOGBOOK:$/i;
+        let inCodeBlock = false;
 
         end = Math.min(doc.lines, end ?? doc.lines);
 
         for(let n = start; n <= end; ++n) {
             const line = doc.line(n);
             const { text } = line;
+
+            // Look for what look like code blocks, and skip over them.
+            if (text.startsWith('```')) {
+                inCodeBlock = !inCodeBlock;
+                continue;
+            }
+
+            if (inCodeBlock) {
+                continue;
+            }
 
             if (text.match(logbookDrawerRe) !== null) {
                 const logbook = this.parse(doc, n);

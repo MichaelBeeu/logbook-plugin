@@ -166,7 +166,7 @@ function updateLogbook(
     // The logbook should start directly below the current line.
     const logbookFrom = lineNumber + 1;
 
-    const logbookParser = new LogbookParser();
+    const logbookParser = new LogbookParser(moment);
 
     const effects: StateEffect<any>[] = [];
 
@@ -187,7 +187,7 @@ function updateLogbook(
         } else {
             outputPrefix = "\n";
         }
-        logbook = new Logbook(position, position);
+        logbook = new Logbook(moment, position, position);
         outputSuffix = "\n";
     }
 
@@ -202,7 +202,7 @@ function updateLogbook(
         console.log('clock should be open');
         if (!openClock) {
             console.log('clock is not open. opening...');
-            logbook.addLine(new LogbookLine(moment()));
+            logbook.addLine(new LogbookLine( moment()));
         } else {
             console.log('clock is open');
         }

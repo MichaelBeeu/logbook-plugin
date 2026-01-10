@@ -97,7 +97,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 
 	closeLogbooksInFile(content: string): string {
 		const pa = new StringParseAdapter(content);
-		const lp = new LogbookParser();
+		const lp = new LogbookParser(moment);
 
 		for (let n = pa.lines; n >= 1; --n) {
 			const line = pa.line(n);

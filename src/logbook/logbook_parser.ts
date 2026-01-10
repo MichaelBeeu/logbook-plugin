@@ -1,11 +1,20 @@
 import { Line, Text } from '@codemirror/state';
 import { Logbook, LogbookLine } from 'logbook/logbook';
 import { ParseAdapterInterface } from 'logbook/parse_adapter';
-import { moment } from 'obsidian';
+import * as Moment from 'moment';
 
 type ParseMode = 'scan'|'drawer';
 
 export default class LogbookParser {
+
+    #moment: typeof Moment;
+
+    constructor(
+        moment: typeof Moment
+    ) {
+        this.#moment = moment;
+    }
+
     /**
      * Parse the provided document for all logbooks.
      * The parser will search "up" from the start position looking
@@ -30,7 +39,7 @@ export default class LogbookParser {
         let mode: ParseMode = 'scan';
         // Store reference to parent line.
         let parentLine: Line|undefined = undefined;
-        let pendingLogbook = new Logbook();
+        let pendingLogbook = new Logbook(this.#moment);
 
         for (let n = from; n <= end; n++) {
             // Get the current line.
@@ -114,7 +123,7 @@ export default class LogbookParser {
 
     #parseClock(line: Line): LogbookLine|undefined {
         const { text, from } = line;
-        const clockRe = /^CLOCK:\s*\[([^\]]+)\](?:--\[([^\]]+)\](?:\s*=>\s*(\d+:\d{2}(?::\d{2})?)?)?)?$/mi
+        const clockRe = /^\s*CLOCK:\s*\[([^\]]+)\](?:--\[([^\]]+)\](?:\s*=>\s*(\d+:\d{2}(?::\d{2})?)?)?)?$/mi
         let result: LogbookLine|undefined = undefined;
 
         const clockData = text.match(clockRe);
@@ -145,7 +154,7 @@ export default class LogbookParser {
         const parts = datetime.split(' ');
         const date = parts[0] ?? '';
         const time = parts[2] ?? parts[1] ?? '00:00:00';
-        return moment(`${date}T${time}`);
+        return this.#moment(`${date}T${time}`);
     }
 
     #parseDuration(duration?: string): moment.Duration|undefined {
@@ -163,7 +172,7 @@ export default class LogbookParser {
         const minutes = parseInt(parts[1] ?? '0');
         const seconds = parseInt(parts[2] ?? '0');
 
-        return moment.duration({
+        return this.#moment.duration({
             hours,
             minutes,
             seconds

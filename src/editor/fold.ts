@@ -3,6 +3,7 @@ import { EditorState, Extension } from "@codemirror/state";
 import LogbookParser from "logbook/logbook_parser";
 import { TextParseAdapter } from "logbook/parse_adapter";
 import LogbookPluginInterface from "main";
+import { moment } from 'obsidian';
 
 export function logbookFoldService(
     plugin: LogbookPluginInterface
@@ -30,7 +31,7 @@ export function logbookFoldService(
             }
 
             const parseAdapter = new TextParseAdapter(doc);
-            const parser = new LogbookParser();
+            const parser = new LogbookParser(moment);
             const book = parser.parse(parseAdapter, lineStart.number);
 
             if (book) {

@@ -1,7 +1,8 @@
+import * as Moment from 'moment';
 
 export type RegExpMatchArrayWithIndices = RegExpMatchArray & { indices: Array<[number, number]> & { groups: { [key: string]: [number, number]}} };
 
-export function formatLogbookDuration(duration: moment.Duration|undefined): string {
+export function formatLogbookDuration(duration: Moment.Duration|undefined): string {
     if (duration === undefined) {
         return '';
     }
@@ -34,11 +35,6 @@ export function isRangeOverlap(
 
     // Look for lack of overlap, and invert the result.
     // These conditions should be easier.
-    console.log(
-        'overlap?',
-        fromA, toA,
-        fromB, toB
-    );
 
     return !(
         (fromB < fromA && toB < fromA)

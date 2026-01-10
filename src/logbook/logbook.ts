@@ -1,10 +1,10 @@
-import { moment } from 'obsidian';
+import * as Moment from 'moment';
 import { formatLogbookDuration } from 'utils';
 
 export class LogbookLine {
-    #startTime: moment.Moment;
-    #endTime?: moment.Moment;
-    #duration?: moment.Duration;
+    #startTime: Moment.Moment;
+    #endTime?: Moment.Moment;
+    #duration?: Moment.Duration;
     #from?: number;
     #to?: number;
 
@@ -22,29 +22,27 @@ export class LogbookLine {
         this.#to = to;
     }
 
-    get duration(): moment.Duration|undefined {
-        if (this.#endTime === undefined) {
-            return undefined;
-        }
+    set duration(value: Moment.Duration|undefined) {
+        this.#duration = value;
+    }
 
-        this.#duration ??= moment.duration(this.#endTime.diff(this.#startTime));
-
+    get duration(): Moment.Duration|undefined {
         return this.#duration;
     }
 
-    set startTime(value: moment.Moment) {
+    set startTime(value: Moment.Moment) {
         this.#startTime = value;
     }
 
-    get startTime(): moment.Moment {
+    get startTime(): Moment.Moment {
         return this.#startTime;
     }
 
-    set endTime(value: moment.Moment) {
+    set endTime(value: Moment.Moment) {
         this.#endTime = value;
     }
 
-    get endTime(): moment.Moment|undefined {
+    get endTime(): Moment.Moment|undefined {
         return this.#endTime;
     }
 
@@ -67,8 +65,6 @@ export class LogbookLine {
     toString(): string {
         let secondHalf = '';
         if (this.#endTime !== undefined) {
-            // const totalTime = this.duration?.asMilliseconds() ?? 0;
-
             const duration = formatLogbookDuration(this.duration);
 
             secondHalf = `--[${this.#endTime.format('YYYY-MM-DD ddd HH:mm:ss')}] => ${duration}`;
@@ -81,6 +77,7 @@ export class Logbook {
     #lines: LogbookLine[];
     #from: number;
     #to: number;
+    #moment: typeof Moment;
 
     get lines(): LogbookLine[] {
         return this.#lines;
@@ -103,10 +100,12 @@ export class Logbook {
     }
 
     constructor(
+        moment: typeof Moment,
         from: number = 0,
         to: number = 0,
-        lines: LogbookLine[] = []
+        lines: LogbookLine[] = [],
     ) {
+        this.#moment = moment;
         this.#from = from;
         this.#to = to;
         this.#lines = lines;
@@ -121,12 +120,12 @@ export class Logbook {
         return this.lines == other.lines;
     }
 
-    getTotalDuration(): moment.Duration {
+    getTotalDuration(): Moment.Duration {
         return this.lines.reduce(
             (total, line) => {
-                return total.add(line.duration);
+                return total.add(this.#ensureLineComplete(line).duration ?? this.#moment.duration(0));
             },
-            moment.duration(0)
+            this.#moment.duration(0)
         );
     }
 
@@ -138,10 +137,18 @@ export class Logbook {
         return this.lines.find(l => l.endTime === undefined);
     }
 
+    #ensureLineComplete(line: LogbookLine): LogbookLine {
+        if (line.duration === undefined && line.endTime !== undefined) {
+            line.duration = this.#moment.duration(line.endTime.diff(line.startTime));
+        }
+
+        return line;
+    }
+
     toString(): string {
         return [
             ":LOGBOOK:",
-            ...this.lines.map(l => l.toString()),
+            ...this.lines.map(l => this.#ensureLineComplete(l).toString()),
             ":END:"
         ].join("\n");
     }

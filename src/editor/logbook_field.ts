@@ -4,6 +4,7 @@ import { TextParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';
 import LogbookPluginInterface from 'main';
 import TimeWidget from 'widgets/time_widget';
+import { moment } from 'obsidian';
 
 export function logbookField(
     plugin: LogbookPluginInterface
@@ -20,7 +21,7 @@ export function logbookField(
             const { doc } = state;
 
             const parseAdapter = new TextParseAdapter(doc);
-            const parser = new LogbookParser();
+            const parser = new LogbookParser(moment);
 
             const books = parser.parseAll(parseAdapter);
 

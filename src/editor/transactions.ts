@@ -106,7 +106,8 @@ export function logbookTransactionFilter(
                             plugin,
                             newDoc,
                             line.number,
-                            stateDesc
+                            stateDesc,
+                            plugin.settings.matchIdentation ? state.offset : -1
                         );
 
                         changes = changes.concat(logbookChanges);
@@ -135,7 +136,8 @@ function updateLogbook(
     plugin: LogbookPluginInterface,
     doc: Text,
     lineNumber: number,
-    state: WorkflowState
+    state: WorkflowState,
+    indentation: number
 ): LogbookUpdateResult
 {
     const {
@@ -190,7 +192,7 @@ function updateLogbook(
         }
     }
 
-    const newBlock = outputPrefix + logbook.toString() + outputSuffix;
+    const newBlock = outputPrefix + logbook.toString(indentation) + outputSuffix;
 
     return {
         changes: [

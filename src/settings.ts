@@ -12,6 +12,8 @@ export interface LogbookPluginSettings {
 	closeOpenLogbooksOnExit: boolean;
 	
 	icons: LogbookIconSetting;
+	
+	matchIdentation: boolean;
 };
 
 export const DEFAULT_SETTINGS: LogbookPluginSettings = {
@@ -22,6 +24,8 @@ export const DEFAULT_SETTINGS: LogbookPluginSettings = {
 		open: "▶",
 		done: "✔️"
 	},
+	
+	matchIdentation: true,
 };
 
 export class LogbookSettingTab extends PluginSettingTab {
@@ -79,6 +83,13 @@ export class LogbookSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Done')
 			.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'done'));
+
+		new Setting(containerEl).setName('Misc').setHeading();
+		
+		new Setting(containerEl)
+			.setName('Match Indentation')
+			.setDesc('Match indentation of the preceding task element when writing a logbook.')
+			.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'matchIdentation'));
 
 		new Setting(containerEl).setName('Experimental').setHeading();
 		

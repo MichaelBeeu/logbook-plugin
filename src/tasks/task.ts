@@ -31,6 +31,7 @@ export interface WorkflowStatus {
     checkboxValueRange?: WorkflowRange;
     listRange?: WorkflowRange;
     currentWorkflowState?: WorkflowState;
+    indentation?: number;
 }
 
 const taskWorkflow: Workflow = {
@@ -99,15 +100,12 @@ export function getWorkflowStatus(
         const matchOffset = match.indices?.groups?.['offset']?.[1] ?? 0;
 
         let result: WorkflowStatus = {
-            // checkboxValueRange: {
-            //     from: offset + index,
-            //     to: offset + index,
-            // },
             offset: matchOffset,
             currentStateRange: {
                 from: offset + index,
                 to: offset + index,
             },
+            indentation: match.groups?.['offset']?.length ?? 0,
         };
 
         if (match.indices?.groups?.['list']) {

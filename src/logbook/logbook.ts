@@ -62,14 +62,17 @@ export class LogbookLine {
         return this.#to;
     }
 
-    toString(): string {
+    toString(indentation?: number): string {
         let secondHalf = '';
         if (this.#endTime !== undefined) {
             const duration = formatLogbookDuration(this.duration);
 
             secondHalf = `--[${this.#endTime.format('YYYY-MM-DD ddd HH:mm:ss')}] => ${duration}`;
         }
-        return `CLOCK: [${this.#startTime.format('YYYY-MM-DD ddd HH:mm:ss')}]${secondHalf}`;
+        
+        const indent = "\t".repeat(indentation ?? 0);
+
+        return `${indent}CLOCK: [${this.#startTime.format('YYYY-MM-DD ddd HH:mm:ss')}]${secondHalf}`;
     }
 }
 
@@ -145,11 +148,14 @@ export class Logbook {
         return line;
     }
 
-    toString(): string {
+    toString(indentation?: number): string {
+        indentation = (indentation ?? 0) + 1;
+        const indent = "\t".repeat(indentation);
+        
         return [
-            ":LOGBOOK:",
-            ...this.lines.map(l => this.#ensureLineComplete(l).toString()),
-            ":END:"
+            `${indent}:LOGBOOK:`,
+            ...this.lines.map(l => this.#ensureLineComplete(l).toString(indentation)),
+            `${indent}:END:`
         ].join("\n");
     }
 }

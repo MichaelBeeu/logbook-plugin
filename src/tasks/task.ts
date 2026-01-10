@@ -30,6 +30,7 @@ export interface WorkflowStatus {
     checkboxValue?: string;
     checkboxValueRange?: WorkflowRange;
     listRange?: WorkflowRange;
+    currentWorkflowState?: WorkflowState;
 }
 
 const taskWorkflow: Workflow = {
@@ -91,8 +92,6 @@ export function getWorkflowStatus(
 
     const match = regex.exec(line) as RegExpMatchArrayWithIndices;
 
-    console.log('getworkflowstatus match', match);
-
     if (match !== null) {
         const index = match.index ?? 0;
         const checkboxValue = match.groups?.['checkbox'];
@@ -145,6 +144,7 @@ export function getWorkflowStatus(
             const stateFrom = stateIndices[0];
             const stateTo = stateIndices[1];
             result.currentState = stateValue;
+            result.currentWorkflowState = getWorkflowState(stateValue);
             result.currentStateRange = {
                 from: offset + stateFrom,
                 to: offset + stateTo,

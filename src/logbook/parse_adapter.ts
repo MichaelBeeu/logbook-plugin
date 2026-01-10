@@ -74,13 +74,10 @@ export class StringParseAdapter implements ParseAdapterInterface {
 
             const matches = this.#text.matchAll(re); // as RegExpMatchArrayWithIndices[];
 
-            console.log(matches);
-
             if (matches) {
                 let number = 0;
                 for (const match of matches) {
                     number ++;
-                    console.log('read line', number);
                     const indices = (match as RegExpMatchArrayWithIndices).indices[0];
                     if (indices) {
                         const [from, to] = indices;

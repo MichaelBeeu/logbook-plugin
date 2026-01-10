@@ -1,17 +1,28 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import LogbookPlugin from "./main";
 
-export interface LogbookPluginSettings {
-	mySetting: string;
 
+export interface LogbookIconSetting {
+	paused: string;
+	open: string;
+	done: string;
+};
+
+export interface LogbookPluginSettings {
 	closeOpenLogbooksOnExit: boolean;
-}
+	
+	icons: LogbookIconSetting;
+};
 
 export const DEFAULT_SETTINGS: LogbookPluginSettings = {
-	mySetting: 'default',
-
 	closeOpenLogbooksOnExit: false,
-}
+	
+	icons: {
+		paused: "⏸",
+		open: "▶",
+		done: "✔️"
+	},
+};
 
 export class LogbookSettingTab extends PluginSettingTab {
 	plugin: LogbookPlugin;
@@ -21,14 +32,21 @@ export class LogbookSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	#saveBasicSetting<K extends keyof LogbookPluginSettings>(key: K): (value: LogbookPluginSettings[K]) => Promise<void> {
-		return async (value: LogbookPluginSettings[K]): Promise<void> => {
-			this.plugin.settings[key] = value;
+	#saveBasicSetting<
+		T extends object,
+		K extends keyof T,
+	>(target: T, key: K): (value: T[K]) => Promise<void> {
+		return async (value: T[K]): Promise<void> => {
+			target[key] = value;
 			return this.plugin.saveSettings();
 		}
 	}
 
-	#configureBasicSetting<K extends keyof LogbookPluginSettings, C extends ValueComponent<any>>(component: C, key: K): C {
+	#configureBasicSetting<
+		C extends ValueComponent<any>,
+		T extends object,
+		K extends keyof T,
+	>(component: C, target: T, key: K): C {
 		if ('onChange' in component) {
 			// TODO: Maybe add a check for each Component type?
 			// Unfortunately the existing components do not implement a common interface that
@@ -36,11 +54,11 @@ export class LogbookSettingTab extends PluginSettingTab {
 			// individually.
 
 			// @ts-expect-error
-			component.onChange(this.#saveBasicSetting(key))
+			component.onChange(this.#saveBasicSetting(target, key))
 		}
 
 		return component
-			.setValue(this.plugin.settings[key]);
+			.setValue(target[key]);
 	}
 
 	display(): void {
@@ -48,16 +66,19 @@ export class LogbookSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		new Setting(containerEl).setName('Icons').setHeading();
+
 		new Setting(containerEl)
-			.setName('Settings #1')
-			.setDesc('It\'s a secret')
-			.addText(text => this.#configureBasicSetting(text, 'mySetting')
-				.setPlaceholder('Enter your secret')
-			);
-				// .onChange(async (value) => {
-				// 	this.plugin.settings.mySetting = value;
-				// 	await this.plugin.saveSettings();
-				// }));
+			.setName('Paused')
+			.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'paused'));
+
+		new Setting(containerEl)
+			.setName('Open')
+			.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'open'));
+
+		new Setting(containerEl)
+			.setName('Done')
+			.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'done'));
 
 		new Setting(containerEl).setName('Experimental').setHeading();
 		
@@ -67,7 +88,7 @@ export class LogbookSettingTab extends PluginSettingTab {
 				This is a best-effort approach due to limitations in Obsidian's on-exit handler.
 				Enabling this may cause data-loss with no undo-history if the exit handler parses documents incorrectly.
 				This may also interfere with other plugins' exit handlers. Enable at your own risk.`)
-			.addToggle(cb => this.#configureBasicSetting(cb, 'closeOpenLogbooksOnExit'))
+			.addToggle(cb => this.#configureBasicSetting(cb, this.plugin.settings, 'closeOpenLogbooksOnExit'))
 		;
 	}
 }

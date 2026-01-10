@@ -23,11 +23,8 @@ export function toggleClock(
                 const { text } = line;
 
                 if (line.from === line.to || text.trim().length === 0) {
-                    console.log("Skipping empty line ", line);
                     continue;
                 }
-
-                console.log("toggle ", line);
 
                 // Get the current workflow status of the line.
                 const status = getWorkflowStatus(text, line.from);
@@ -38,11 +35,6 @@ export function toggleClock(
                     // When adding a state to an existing line we must ensure there is a space added
                     // between the state name and the existing text.
                     const stateSuffix = (!!status.currentState) ? '' : ' ';
-
-                    console.log('change pos', 
-                        status.currentStateRange?.from,
-                        status
-                    );
 
                     // Change the current task state.
                     changes.push({

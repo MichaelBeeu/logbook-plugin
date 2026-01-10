@@ -78,8 +78,6 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 		const promises: Promise<any>[] = [];
 
 		for (const file of this.logbookFiles) {
-			console.log('Cleanup file.', file);
-
 			const promise = vault.read(file)
 				.then((content: string) => {
 					const newContent = this.closeLogbooksInFile(content);
@@ -106,14 +104,11 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			const workflowStatus = getWorkflowStatus(text, line.from);
 
 			if (workflowStatus) {
-				console.log('get line', n+1);
 				const book = lp.parse(pa, n + 1);
 
 				if (book) {
-					console.log('got book');
 					const openClock = book.getOpenClock();
 					if (openClock) {
-						console.log('closing open clock');
 						openClock.endTime = moment();
 
 						const block = book.toString();
@@ -123,11 +118,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 						const start = content.substring(0, from);
 						const end = content.substring(to);
 
-						console.log('replacing', from, to, start, end);
-
 						content = start + block + end;
-					} else {
-						console.log('no open clock');
 					}
 				}
 

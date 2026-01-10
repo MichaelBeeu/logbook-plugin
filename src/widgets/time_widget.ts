@@ -1,17 +1,23 @@
 import { EditorView, WidgetType } from "@codemirror/view";
 import { Logbook } from "logbook/logbook";
+import LogbookPlugin from "main";
 import { moment } from "obsidian";
+import { WorkflowStatus } from "tasks/task";
 import { formatLogbookDuration } from "utils";
 
 export default class TimeWidget extends WidgetType
 {
     #logbook: Logbook;
     #interval: number|undefined = undefined;
+    #workflowState: WorkflowStatus|null;
+    #plugin: LogbookPlugin;
 
-    constructor(logbook: Logbook) {
+    constructor(logbook: Logbook, plugin: LogbookPlugin, workflowState: WorkflowStatus|null = null) {
         super();
 
         this.#logbook = logbook;
+        this.#plugin = plugin;
+        this.#workflowState = workflowState;
     }
 
     eq(widget: TimeWidget): boolean {
@@ -32,6 +38,8 @@ export default class TimeWidget extends WidgetType
                 () => this.tick(el),
                 1000
             );
+            
+            this.#plugin.registerInterval(this.#interval);
         }
 
         return el;
@@ -44,17 +52,19 @@ export default class TimeWidget extends WidgetType
     #getTotalDuration() {
         let duration = this.#logbook.getTotalDuration();
         const openClock = this.#logbook.getOpenClock();
-        let icon = "⏱️";
+        let icon = this.#plugin.settings.icons.paused;
 
         if (openClock !== undefined) {
             const now = moment();
             const diff = now.diff(openClock.startTime);
             duration.add(diff);
 
-            icon = "⌛";
+            icon = this.#plugin.settings.icons.open;
+        } else if (this.#workflowState?.currentWorkflowState?.checkbox !== ' ') {
+            icon = this.#plugin.settings.icons.done;
         }
 
-        return formatLogbookDuration(duration) + ` ${icon}`;
+        return formatLogbookDuration(duration) + ' ' + icon;
     }
 
     #clearInterval() {

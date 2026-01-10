@@ -24,8 +24,6 @@ export function logbookTransactionFilter(
             let changes: ChangeSpec[] = [];
             let effects: StateEffect<any>[] = [];
 
-            console.log('logbookTransaction Filter', transaction);
-
             // Get the new document.
             const newDoc = transaction.newDoc;
 
@@ -51,8 +49,6 @@ export function logbookTransactionFilter(
                         return;
                     }
 
-                    console.log('state', state);
-
                     const newState = state.currentState ?? '';
 
                     let stateDesc: WorkflowState|undefined;
@@ -66,8 +62,6 @@ export function logbookTransactionFilter(
                                 to: state.currentStateRange?.to ?? line.from,
                                 insert: stateDesc?.name ?? '',
                             });
-
-                            console.log("Update state -> checkbox changed");
                         } else {
                             console.warn("No matching state found.", state.checkboxValue);
                         }
@@ -89,8 +83,6 @@ export function logbookTransactionFilter(
                                     to: state.checkboxValueRange?.to ?? line.from,
                                     insert: checkbox,
                                 });
-
-                                console.log("Update checkbox -> state changed");
                             } else {
                                 // If no checkbox is found, then add it.
                                 const checkFrom = state.checkboxValueRange?.from
@@ -105,16 +97,11 @@ export function logbookTransactionFilter(
                                     to: checkTo,
                                     insert: `- [${checkbox}] `,
                                 });
-
-                                console.log("Insert checkbox -> state changed");
                             }
                         }
-                    } else {
-                        console.log("skipping due to lack of overlap");
                     }
 
                     if (stateDesc) {
-                        console.log('updating logbook');
                         const {changes: logbookChanges, effects: logbookEffects } = updateLogbook(
                             plugin,
                             newDoc,
@@ -161,8 +148,6 @@ function updateLogbook(
 
     const file = activeEditor?.file;
 
-    console.log('file', file);
-
     // The logbook should start directly below the current line.
     const logbookFrom = lineNumber + 1;
 
@@ -178,7 +163,6 @@ function updateLogbook(
     let outputSuffix = '';
     
     if (!logbook) {
-        console.log('no logbook found. creating');
         let position = doc.length;
 
         if (logbookFrom <= doc.lines) {
@@ -191,36 +175,22 @@ function updateLogbook(
         outputSuffix = "\n";
     }
 
-    console.log('logbook', logbook);
-
     const openClock = logbook.getOpenClock();
     if (state.clockState === 'open') {
         if (file) {
             plugin.addLogbookFile(file);
         }
 
-        console.log('clock should be open');
         if (!openClock) {
-            console.log('clock is not open. opening...');
             logbook.addLine(new LogbookLine( moment()));
-        } else {
-            console.log('clock is open');
         }
     } else if (state.clockState === 'closed') {
-        console.log('clock should be closed');
         if (openClock) {
-            console.log('clock is open. closing');
             openClock.endTime = moment();
-        } else {
-            console.log('clock is closed');
         }
     }
 
-    console.log('logbook', logbook);
-
     const newBlock = outputPrefix + logbook.toString() + outputSuffix;
-
-    console.log('newBlock', newBlock);
 
     return {
         changes: [

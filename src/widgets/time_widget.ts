@@ -29,11 +29,16 @@ export default class TimeWidget extends WidgetType
 
         const el = document.createElement('pre');
         el.classList.add('logbook-time');
+        
+        if (this.#plugin.settings.timeWidgetPosition === 'right') {
+            el.classList.add('logbook-time-right');
+        }
+
         el.textContent = this.#getTotalDuration();
 
         this.#clearInterval();
 
-        if (openClock !== undefined) {
+        if (openClock !== undefined && this.#plugin.settings.timeWidgetInterval) {
             this.#interval = window.setInterval(
                 () => this.tick(el),
                 1000

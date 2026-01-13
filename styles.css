@@ -9,12 +9,17 @@ If your plugin does not need CSS, delete this file.
 
 
 .logbook-time {
-    float: right;
     opacity: 0.5;
 
     transition: 0.25s ease all;
 
-    margin: 0;
+    margin: 0 0 0 0.5em;
+    
+    display: inline-block;
+}
+
+.logbook-time-right {
+    float: right;
 }
 
 .logbook-time:hover {

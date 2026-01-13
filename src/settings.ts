@@ -1,6 +1,7 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import LogbookPlugin from "./main";
 
+export type TimeWidgetPosition = "inline"|"right";
 
 export interface LogbookIconSetting {
 	paused: string;
@@ -9,11 +10,23 @@ export interface LogbookIconSetting {
 };
 
 export interface LogbookPluginSettings {
+	// Should we attempt to close all opened logbooks in this session on exit?
 	closeOpenLogbooksOnExit: boolean;
 	
+	// "Icons" to show in task time widget.
 	icons: LogbookIconSetting;
 	
+	// Should logbooks match the preceding line's indentation?
 	matchIdentation: boolean;
+	
+	// Should logbooks appear collapsed?
+	collapseLogbooks: boolean;
+	
+	// What position should the task time widget be placed?
+	timeWidgetPosition: TimeWidgetPosition;
+
+	// Should the task time widget start an interval to update the timer when active?
+	timeWidgetInterval: boolean;
 };
 
 export const DEFAULT_SETTINGS: LogbookPluginSettings = {
@@ -26,6 +39,12 @@ export const DEFAULT_SETTINGS: LogbookPluginSettings = {
 	},
 	
 	matchIdentation: true,
+	
+	collapseLogbooks: true,
+	
+	timeWidgetPosition: "right",
+
+	timeWidgetInterval: true,
 };
 
 export class LogbookSettingTab extends PluginSettingTab {
@@ -70,6 +89,42 @@ export class LogbookSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		new Setting(containerEl).setName('Logbook').setHeading();
+		
+		new Setting(containerEl)
+			.setName('Match Indentation')
+			.setDesc(`Match indentation of the preceding task element when writing a logbook.
+				Enable to make nesting of lists look more natural.`)
+			.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'matchIdentation'));
+		
+		new Setting(containerEl)
+			.setName('Collapse Logbooks')
+			.setDesc(`Collapse all logbooks in the editor.`)
+			.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'collapseLogbooks'));
+
+		new Setting(containerEl).setName('Task Timer').setHeading();
+		
+		new Setting(containerEl)
+			.setName("Task Time Position")
+			.setDesc("Position of total time spent on a task.")
+			.addDropdown(value => {
+					value.addOptions({
+						"inline": "Inline",
+						"right": "Right"
+					});
+					this.#configureBasicSetting(value, this.plugin.settings, 'timeWidgetPosition');
+				}
+			);
+		
+		new Setting(containerEl)
+			.setName("Enable Task Time Interval")
+			.setDesc(`Should the task time be updated automatically every second when the logbook is open?
+				The time will still update each time the widget is re-rendered.
+				When enabled it will update each second.`)
+			.addToggle(value => {
+				this.#configureBasicSetting(value, this.plugin.settings, 'timeWidgetInterval');
+			});
+
 		new Setting(containerEl).setName('Icons').setHeading();
 
 		new Setting(containerEl)
@@ -83,13 +138,6 @@ export class LogbookSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Done')
 			.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'done'));
-
-		new Setting(containerEl).setName('Misc').setHeading();
-		
-		new Setting(containerEl)
-			.setName('Match Indentation')
-			.setDesc('Match indentation of the preceding task element when writing a logbook.')
-			.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'matchIdentation'));
 
 		new Setting(containerEl).setName('Experimental').setHeading();
 		

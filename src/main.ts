@@ -36,7 +36,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			editorCallback: toggleClock(this),
 			hotkeys: [
 				{
-					modifiers: ['Ctrl', 'Shift'],
+					modifiers: ['Ctrl'],
 					key: 'Enter',
 				}
 			]

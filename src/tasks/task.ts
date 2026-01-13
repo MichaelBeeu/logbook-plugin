@@ -9,9 +9,7 @@ export interface WorkflowState {
     clockState: ClockState;
 }
 
-export interface Workflow {
-    [key: string]: WorkflowState;
-}
+type Workflow = Record<string, WorkflowState>;
 
 export interface WorkflowResult {
     name: string;
@@ -65,7 +63,6 @@ export function getWorkflowStates(): string[] {
 
 export function getWorkflowRegex(): RegExp {
     let states = getWorkflowStates().join('|');
-    // const r = `^\\\s*((?:- \\\[.\\\] )?)(${states})?`;
     const r = `^(?<offset>\\\s*)(?<list>- (\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
 
     return new RegExp(r, 'gd');
@@ -121,7 +118,6 @@ export function getWorkflowStatus(
 
         if (checkboxValue) {
             const checkboxIndices = match?.indices?.groups?.['checkbox'] ?? [0, 0];
-            // const checkboxOffset = match?.indices?.[1]?.[0] ?? 0;
             const checkboxFrom = checkboxIndices[0];
             const checkboxTo = checkboxIndices[1];
             result.checkboxValue = match?.groups?.['checkbox'];

@@ -10,8 +10,12 @@ export function logbookFoldService(
 ): Extension {
     return foldService.of(
         (state: EditorState, from: number, to: number): {from: number, to: number}|null => {
+            // Exit early if collapsing logbooks is disabled.
+            if (!plugin.settings.collapseLogbooks) {
+                return null;
+            }
+            
             const { doc } = state;
-            const { lines } = doc;
             const lineStart = doc.lineAt(from);
 
             const { text: startText } = lineStart;

@@ -64,6 +64,16 @@ export function logbookField(
                         })
                     );
                 }
+                
+                if (plugin.settings.hideLogbooks) {
+                    atomicBuilder.add(
+                        book.from,
+                        book.to + 1,
+                        Decoration.replace({
+                            block: true,
+                        })
+                    );
+                }
             }
 
             return {

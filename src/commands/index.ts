@@ -65,3 +65,13 @@ export function closeAllOpenClocks(
         plugin.closeAllLogbookFiles();
     };
 };
+
+export function toggleHideLogbooks(
+    plugin: LogbookPluginInterface
+) {
+    return function (editor: Editor, view: MarkdownView) {
+        plugin.settings.hideLogbooks = !plugin.settings.hideLogbooks;
+        
+        plugin.saveSettings();
+    }
+}

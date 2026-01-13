@@ -51,6 +51,19 @@ const taskWorkflow: Workflow = {
         checkbox: 'x',
         clockState: 'closed',
     },
+
+    "LATER": {
+        name: "LATER",
+        next: "NOW",
+        checkbox: ' ',
+        clockState: 'closed',
+    },
+    "NOW": {
+        name: "NOW",
+        next: "DONE",
+        checkbox: ' ',
+        clockState: 'open',
+    },
 };
 
 export function getWorkflowState(state: string): WorkflowState|undefined {
@@ -63,7 +76,7 @@ export function getWorkflowStates(): string[] {
 
 export function getWorkflowRegex(): RegExp {
     let states = getWorkflowStates().join('|');
-    const r = `^(?<offset>\\\s*)(?<list>- (\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
+    const r = `^(?<offset>\\\s*)(?<list>- )(?:(\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
 
     return new RegExp(r, 'gd');
 }

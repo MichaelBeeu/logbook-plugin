@@ -56,7 +56,10 @@ export function logbookField(
                         taskState.currentStateRange.to,
                         Decoration.mark({
                             attributes: {
-                                style: "font-weight: bold"
+                                style: "font-weight: bold",
+                                // Disable spellcheck on the task state, as it should be valid even
+                                // if not in the dictionary.
+                                spellcheck: "false",
                             }
                         })
                     );

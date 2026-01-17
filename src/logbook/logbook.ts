@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports
 import * as Moment from 'moment';
 import { formatLogbookDuration } from 'utils';
 
@@ -9,9 +10,9 @@ export class LogbookLine {
     #to?: number;
 
     constructor(
-        startTime: moment.Moment,
-        endTime?: moment.Moment,
-        duration?: moment.Duration,
+        startTime: Moment.Moment,
+        endTime?: Moment.Moment,
+        duration?: Moment.Duration,
         from?: number,
         to?: number,
     ) {

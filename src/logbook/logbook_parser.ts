@@ -1,6 +1,7 @@
-import { Line, Text } from '@codemirror/state';
+import { Line } from '@codemirror/state';
 import { Logbook, LogbookLine } from 'logbook/logbook';
 import { ParseAdapterInterface } from 'logbook/parse_adapter';
+// eslint-disable-next-line no-restricted-imports
 import * as Moment from 'moment';
 
 type ParseMode = 'scan'|'drawer';
@@ -37,8 +38,6 @@ export default class LogbookParser {
 
         // Start in scan mode.
         let mode: ParseMode = 'scan';
-        // Store reference to parent line.
-        let parentLine: Line|undefined = undefined;
         let pendingLogbook = new Logbook(this.#moment);
 
         for (let n = from; n <= end; n++) {
@@ -55,7 +54,6 @@ export default class LogbookParser {
                     pendingLogbook.from = line.from;
 
                     mode = 'drawer';
-                    parentLine = doc.line(n - 1);
                 } else {
                     // Not a logbook, so exit.
                     break;
@@ -146,7 +144,7 @@ export default class LogbookParser {
         return result;
     }
 
-    #parseDate(datetime?: string): moment.Moment|undefined {
+    #parseDate(datetime?: string): Moment.Moment|undefined {
         if (datetime === undefined) {
             return undefined;
         }
@@ -157,7 +155,7 @@ export default class LogbookParser {
         return this.#moment(`${date}T${time}`);
     }
 
-    #parseDuration(duration?: string): moment.Duration|undefined {
+    #parseDuration(duration?: string): Moment.Duration|undefined {
         if (duration === undefined) {
             return undefined;
         }

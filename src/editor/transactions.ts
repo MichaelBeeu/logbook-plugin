@@ -9,7 +9,7 @@ import { TextParseAdapter } from "logbook/parse_adapter";
 
 interface LogbookUpdateResult {
     changes: ChangeSpec[];
-    effects: StateEffect<any>[];
+    effects: StateEffect<{from: number, to: number}>[];
 };
 
 export function logbookTransactionFilter(
@@ -22,7 +22,7 @@ export function logbookTransactionFilter(
                 transaction,
             ];
             let changes: ChangeSpec[] = [];
-            let effects: StateEffect<any>[] = [];
+            let effects: StateEffect<{from: number, to: number}>[] = [];
 
             // Get the new document.
             const newDoc = transaction.newDoc;
@@ -155,7 +155,7 @@ function updateLogbook(
 
     const logbookParser = new LogbookParser(moment);
 
-    const effects: StateEffect<any>[] = [];
+    const effects: StateEffect<{from: number, to: number}>[] = [];
 
     // Parse the logbook, or create a new one.
     const parseAdapter = new TextParseAdapter(doc);

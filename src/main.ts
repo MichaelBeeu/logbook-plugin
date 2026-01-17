@@ -34,12 +34,6 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			id: 'toggle-clock',
 			name: 'Toggle clock',
 			editorCallback: toggleClock(this),
-			hotkeys: [
-				{
-					modifiers: ['Ctrl'],
-					key: 'Enter',
-				},
-			],
 		});
 
 		this.addCommand({
@@ -50,14 +44,8 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 		
 		this.addCommand({
 			id: 'toggle-hide-logbooks',
-			name: 'Toggle Showing Logbooks',
+			name: 'Toggle showing logbooks',
 			editorCallback: toggleHideLogbooks(this),
-			hotkeys: [
-				{
-					modifiers: ['Ctrl', 'Shift'],
-					key: 'Enter',
-				},
-			],
 		});
 
 		this.app.workspace.on('quit', (tasks: Tasks) => {
@@ -65,7 +53,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 				console.warn("Attempting to close open logbooks!");
 
 				tasks.add(
-					async (): Promise<any> => {
+					async (): Promise<void> => {
 						return this.closeAllLogbookFiles();
 					}
 				);
@@ -87,14 +75,14 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			}
 		} = this;
 
-		const promises: Promise<any>[] = [];
+		const promises: Promise<void>[] = [];
 
 		for (const file of this.logbookFiles) {
 			const promise = vault.read(file)
 				.then((content: string) => {
 					const newContent = this.closeLogbooksInFile(content);
 
-					vault.modify(file, newContent);
+					return vault.modify(file, newContent);
 				});
 			
 			promises.push(promise);

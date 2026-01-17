@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports
 import * as Moment from 'moment';
 import { StringParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';

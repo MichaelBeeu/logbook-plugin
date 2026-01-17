@@ -1,5 +1,6 @@
 import tseslint from 'typescript-eslint';
 import obsidianmd from "eslint-plugin-obsidianmd";
+import pluginJest from 'eslint-plugin-jest';
 import globals from "globals";
 import { globalIgnores } from "eslint/config";
 
@@ -8,6 +9,7 @@ export default tseslint.config(
 		languageOptions: {
 			globals: {
 				...globals.browser,
+				...globals.jest
 			},
 			parserOptions: {
 				projectService: {
@@ -22,6 +24,16 @@ export default tseslint.config(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		plugins: {
+			jest: pluginJest
+		},
+		rules: {
+			"depend/ban-dependencies": ["error", {
+				"allowed": ["moment"],
+			}],
+		},
+	},
 	globalIgnores([
 		"node_modules",
 		"dist",

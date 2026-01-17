@@ -1,4 +1,4 @@
-import {App, PluginSettingTab, Setting, SettingGroup, ValueComponent} from "obsidian";
+import {App, PluginSettingTab, SettingGroup, ValueComponent} from "obsidian";
 import LogbookPlugin from "./main";
 
 export type TimeWidgetPosition = "inline"|"right";
@@ -71,7 +71,7 @@ export class LogbookSettingTab extends PluginSettingTab {
 	}
 
 	#configureBasicSetting<
-		C extends ValueComponent<any>,
+		C extends ValueComponent<unknown>,
 		T extends object,
 		K extends keyof T,
 	>(component: C, target: T, key: K): C {
@@ -97,31 +97,31 @@ export class LogbookSettingTab extends PluginSettingTab {
 		new SettingGroup(containerEl)
 			.setHeading('Logbook')
 			.addSetting(
-				setting => setting
-					.setName('Match Indentation')
-					.setDesc(`Match indentation of the preceding task element when writing a logbook.
-						Enable to make nesting of lists look more natural.`)
-					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'matchIdentation'))
+				setting => { setting
+						.setName('Match andentation')
+						.setDesc(`Match indentation of the preceding task element when writing a logbook.
+							Enable to make nesting of lists look more natural.`)
+						.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'matchIdentation')) }
 			)
 			.addSetting(
-				setting => setting
-					.setName('Collapse Logbooks')
+				setting => { setting
+					.setName('Collapse logbooks')
 					.setDesc(`Collapse all logbooks in the editor.`)
-					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'collapseLogbooks'))
+					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'collapseLogbooks')) }
 			)
 			.addSetting(
-				setting => setting
-					.setName('Hide Logbooks')
+				setting => { setting
+					.setName('Hide logbooks')
 					.setDesc(`Hide logbooks from the editor.
 						This will make the editor look cleaner, but make manually editing log entries more difficult.`)
-					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'hideLogbooks'))
+					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'hideLogbooks')) }
 			);
 
 		new SettingGroup(containerEl)
 			.setHeading('Task Timer')
 			.addSetting(
-				setting => setting
-					.setName("Task Time Position")
+				setting => { setting
+					.setName("Task time position")
 					.setDesc("Position of total time spent on a task.")
 					.addDropdown(value => {
 							value.addOptions({
@@ -130,47 +130,47 @@ export class LogbookSettingTab extends PluginSettingTab {
 							});
 							this.#configureBasicSetting(value, this.plugin.settings, 'timeWidgetPosition');
 						}
-					)
+					) }
 			)
 			.addSetting(
-				setting => setting
-					.setName("Enable Task Time Interval")
+				setting => { setting
+					.setName("Enable task time interval")
 					.setDesc(`Should the task time be updated automatically every second when the logbook is open?
 						The time will still update each time the widget is re-rendered.
 						When enabled it will update each second.`)
 					.addToggle(value => {
 						this.#configureBasicSetting(value, this.plugin.settings, 'timeWidgetInterval');
-					})
+					}) }
 			);
 
 		new SettingGroup(containerEl)
 			.setHeading('Icons')
 			.addSetting(
-				setting => setting
+				setting => { setting
 					.setName('Paused')
-					.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'paused'))
+					.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'paused')) }
 			)
 			.addSetting(
-				setting => setting
+				setting => { setting
 					.setName('Open')
-					.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'open'))
+					.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'open')) }
 			)
 			.addSetting(
-				setting => setting
+				setting => { setting
 					.setName('Done')
-					.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'done'))
+					.addText(text => this.#configureBasicSetting(text, this.plugin.settings.icons, 'done')) }
 			);
 
 		new SettingGroup(containerEl)
 			.setHeading('Experimental')
 			.addSetting(
-				setting => setting
-					.setName('Close Open Logbook on Exit')
+				setting => { setting
+					.setName('Close open logbook on exit')
 					.setDesc(`Attempt to close all open logbooks when Obsidian exits.
 						This is a best-effort approach due to limitations in Obsidian's on-exit handler.
 						Enabling this may cause data-loss with no undo-history if the exit handler parses documents incorrectly.
 						This may also interfere with other plugins' exit handlers. Enable at your own risk.`)
-					.addToggle(cb => this.#configureBasicSetting(cb, this.plugin.settings, 'closeOpenLogbooksOnExit'))
+					.addToggle(cb => this.#configureBasicSetting(cb, this.plugin.settings, 'closeOpenLogbooksOnExit')) }
 			);
 	}
 }

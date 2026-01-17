@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports
 import * as Moment from 'moment';
 
 export type RegExpMatchArrayWithIndices = RegExpMatchArray & { indices: Array<[number, number]> & { groups: { [key: string]: [number, number]}} };

@@ -26,7 +26,7 @@ export function logbookViewUpdateListener(
                 const { from, to } = editorView.viewport;
                 const fromLine = doc.lineAt(from);
                 const toLine = doc.lineAt(to);
-                const effects: StateEffect<any>[] = [];
+                const effects: StateEffect<{from: number, to: number}>[] = [];
 
                 for (let n = fromLine.number; n <= toLine.number; ++n) {
                     const line = doc.line(n);

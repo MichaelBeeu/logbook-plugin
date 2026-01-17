@@ -34,7 +34,7 @@ export function toggleClock(
                     const nextState = proceedWorkflow(status.currentState);
                     // When adding a state to an existing line we must ensure there is a space added
                     // between the state name and the existing text.
-                    const stateSuffix = (!!status.currentState) ? '' : ' ';
+                    const stateSuffix = (status.currentState) ? '' : ' ';
 
                     // Change the current task state.
                     changes.push({
@@ -61,17 +61,17 @@ export function toggleClock(
 export function closeAllOpenClocks(
     plugin: LogbookPluginInterface
 ) {
-    return function (editor: Editor, view: MarkdownView) {
-        plugin.closeAllLogbookFiles();
+    return async function (editor: Editor, view: MarkdownView) {
+        await plugin.closeAllLogbookFiles();
     };
 };
 
 export function toggleHideLogbooks(
     plugin: LogbookPluginInterface
 ) {
-    return function (editor: Editor, view: MarkdownView) {
+    return async function (editor: Editor, view: MarkdownView) {
         plugin.settings.hideLogbooks = !plugin.settings.hideLogbooks;
         
-        plugin.saveSettings();
+        await plugin.saveSettings();
     }
 }

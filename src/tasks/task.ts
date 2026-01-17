@@ -76,6 +76,7 @@ export function getWorkflowStates(): string[] {
 
 export function getWorkflowRegex(): RegExp {
     let states = getWorkflowStates().join('|');
+    // eslint-disable-next-line no-useless-escape
     const r = `^(?<offset>\\\s*)(?<list>- )(?:(\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
 
     return new RegExp(r, 'gd');

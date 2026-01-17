@@ -1,5 +1,4 @@
 import { createDefaultPreset } from 'ts-jest';
-import tsConfig from './tsconfig.json' with { type: 'json' };
 import type { Config } from 'jest';
 
 const tsJestTransformCfg = createDefaultPreset().transform;
@@ -15,6 +14,6 @@ export default {
 
   roots: ['<rootDir>'],
   modulePaths: [
-    tsConfig.compilerOptions.baseUrl,
+    'src',
   ],
 } satisfies Config;

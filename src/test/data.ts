@@ -1,4 +1,5 @@
 import { LogbookLine } from "logbook/logbook";
+// eslint-disable-next-line no-restricted-imports
 import * as moment from 'moment';
 
 export interface LogbookTest {

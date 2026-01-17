@@ -106,6 +106,9 @@ export class StringParseAdapter implements ParseAdapterInterface {
 
     get lines(): number {
         if (!this.#content) {
+            // TODO: Fix this to explicity calculate the number of lines,
+            // instead of relying on the side-affect of acessing `content`.
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             this.content;
         }
 
@@ -117,6 +120,6 @@ export class StringParseAdapter implements ParseAdapterInterface {
             return this.content[n]!;
         }
 
-        throw `Line ${n} does not exist in document with ${this.lines} lines.`;
+        throw new RangeError(`Line ${n} does not exist in document with ${this.lines} lines.`);
     }
 }

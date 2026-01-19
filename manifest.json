@@ -1,7 +1,7 @@
 {
 	"id": "logbook-plugin",
 	"name": "Logbook Plugin",
-	"version": "1.0.0",
+	"version": "0.1.1",
 	"minAppVersion": "1.11.4",
 	"description": "Time and task tracking for Obsidian.",
 	"author": "Michael Beeuwsaert",

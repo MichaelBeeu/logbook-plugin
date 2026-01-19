@@ -13,6 +13,8 @@ import { getWorkflowStatus } from 'tasks/task';
 export interface LogbookPluginInterface {
 	addLogbookFile(file: TFile): void;
 	closeAllLogbookFiles(): Promise<void>;
+	loadSettings(): Promise<void>;
+	saveSettings(): Promise<void>;
 };
 
 export default class LogbookPlugin extends Plugin implements LogbookPluginInterface {

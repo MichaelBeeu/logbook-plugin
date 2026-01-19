@@ -67,6 +67,19 @@ export class StringParseAdapter implements ParseAdapterInterface {
     }
 
     get content(): ParseLine[] {
+        return this.#parseContent();
+    }
+
+    get lines(): number {
+        if (!this.#content) {
+            this.#parseContent();
+        }
+
+        return this.#lines;
+    }
+
+    #parseContent(): ParseLine[]
+    {
         if (!this.#content) {
             this.#content = [];
 
@@ -94,25 +107,9 @@ export class StringParseAdapter implements ParseAdapterInterface {
 
                 this.#lines = number;
             }
-
-            // if (matches) {
-            //     for (const match of matches) {
-            //         const [from, to] = match[1].indices;
-            //     }
-            // }
         }
+
         return this.#content;
-    }
-
-    get lines(): number {
-        if (!this.#content) {
-            // TODO: Fix this to explicity calculate the number of lines,
-            // instead of relying on the side-affect of acessing `content`.
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            this.content;
-        }
-
-        return this.#lines;
     }
 
     line(n: number): ParseLine {

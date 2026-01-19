@@ -98,7 +98,7 @@ export class LogbookSettingTab extends PluginSettingTab {
 			.setHeading('Logbook')
 			.addSetting(
 				setting => { setting
-						.setName('Match andentation')
+						.setName('Match indentation')
 						.setDesc(`Match indentation of the preceding task element when writing a logbook.
 							Enable to make nesting of lists look more natural.`)
 						.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'matchIdentation')) }

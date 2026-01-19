@@ -31,6 +31,9 @@ jobs:
         run: |
           pnpm install
           pnpm run build
+          mkdir logbook
+          cp dist/main.js dist/manifest.json dist/styles.css logbook
+          zip -r "logbook.zip" logbook/*
 
       - name: Create release
         env:
@@ -41,4 +44,4 @@ jobs:
           gh release create "$tag" \
             --title="$tag" \
             --draft \
-            dist/main.js dist/manifest.json dist/styles.css
+            dist/main.js dist/manifest.json dist/styles.css logbook.zip

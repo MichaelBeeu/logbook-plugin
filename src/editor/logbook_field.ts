@@ -5,7 +5,7 @@ import LogbookParser from 'logbook/logbook_parser';
 import LogbookPluginInterface from 'main';
 import TimeWidget from 'widgets/time_widget';
 import { moment } from 'obsidian';
-import { getAllWorkflowStatuses, getWorkflowStatus } from 'tasks/task';
+import { getAllWorkflowStatuses } from 'tasks/task';
 
 interface LogbookFieldState {
     decorations: DecorationSet;
@@ -23,6 +23,8 @@ export function logbookField(
             };
         },
         update(oldState: LogbookFieldState, transaction: Transaction): LogbookFieldState {
+            const isSourceMode = plugin.isSourceMode();
+
             const builder = new RangeSetBuilder<Decoration>();
             const atomicBuilder = new RangeSetBuilder<Decoration>();
 
@@ -72,7 +74,7 @@ export function logbookField(
                     );
                     
                     // If logbooks should be hidden, then hide this one.
-                    if (plugin.settings.hideLogbooks) {
+                    if (plugin.settings.hideLogbooks && !isSourceMode) {
                         atomicBuilder.add(
                             book.from,
                             book.to + 1,

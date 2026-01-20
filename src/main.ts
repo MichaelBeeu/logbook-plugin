@@ -1,4 +1,4 @@
-import { Plugin, TFile, Tasks, moment } from 'obsidian';
+import { MarkdownView, Plugin, TFile, Tasks, moment } from 'obsidian';
 import { DEFAULT_SETTINGS, LogbookPluginSettings, LogbookSettingTab } from "./settings";
 import { logbookField } from 'editor/logbook_field';
 import { closeAllOpenClocks, toggleClock, toggleHideLogbooks } from 'commands';
@@ -15,6 +15,7 @@ export interface LogbookPluginInterface {
 	closeAllLogbookFiles(): Promise<void>;
 	loadSettings(): Promise<void>;
 	saveSettings(): Promise<void>;
+	isSourceMode(): boolean;
 };
 
 export default class LogbookPlugin extends Plugin implements LogbookPluginInterface {
@@ -60,6 +61,10 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 					}
 				);
 			}
+		});
+
+		this.app.workspace.on('layout-change', () => {
+			this.onLayoutChange();
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
@@ -138,6 +143,20 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 
 	onunload() {
 		this.logbookFiles.clear();
+	}
+
+	isSourceMode(): boolean {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const viewState = view?.getState();
+		return (viewState?.source as boolean) ?? false;
+	}
+
+	onLayoutChange() {
+		if (this.isSourceMode()) {
+			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+			const editor = view?.editor;
+			editor?.exec('unfoldAll');
+		}
 	}
 
 	async loadSettings() {

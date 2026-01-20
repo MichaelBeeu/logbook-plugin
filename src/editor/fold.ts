@@ -14,35 +14,39 @@ export function logbookFoldService(
             if (!plugin.settings.collapseLogbooks) {
                 return null;
             }
-            
-            const { doc } = state;
-            const lineStart = doc.lineAt(from);
 
-            const { text: startText } = lineStart;
+            const isSourceMode = plugin.isSourceMode();
+            if (!isSourceMode) {
 
-            if (startText.match(/^\s*:LOGBOOK:$/) === null) {
-                return null;
-            }
+                const { doc } = state;
+                const lineStart = doc.lineAt(from);
 
-            // Grab the text before the line. Look for what looks like code block delimiters.
-            const docBefore = doc.slice(0, lineStart.from).toString();
-            const codeBlocks = docBefore.match(/^```/gm) ?? [];
-            const numCodeBlocks = codeBlocks.length;
+                const { text: startText } = lineStart;
 
-            // If there's an odd number of code block markers, then assume we're in a codeblock, and exit.
-            if (numCodeBlocks % 2 === 1) {
-                return null;
-            }
+                if (startText.match(/^\s*:LOGBOOK:$/) === null) {
+                    return null;
+                }
 
-            const parseAdapter = new TextParseAdapter(doc);
-            const parser = new LogbookParser(moment);
-            const book = parser.parse(parseAdapter, lineStart.number);
+                // Grab the text before the line. Look for what looks like code block delimiters.
+                const docBefore = doc.slice(0, lineStart.from).toString();
+                const codeBlocks = docBefore.match(/^```/gm) ?? [];
+                const numCodeBlocks = codeBlocks.length;
 
-            if (book) {
-                return {
-                    from: lineStart.from,
-                    to: book.to,
-                };
+                // If there's an odd number of code block markers, then assume we're in a codeblock, and exit.
+                if (numCodeBlocks % 2 === 1) {
+                    return null;
+                }
+
+                const parseAdapter = new TextParseAdapter(doc);
+                const parser = new LogbookParser(moment);
+                const book = parser.parse(parseAdapter, lineStart.number);
+
+                if (book) {
+                    return {
+                        from: lineStart.from,
+                        to: book.to,
+                    };
+                }
             }
 
             return null;

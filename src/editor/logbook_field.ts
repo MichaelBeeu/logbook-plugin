@@ -5,7 +5,7 @@ import LogbookParser from 'logbook/logbook_parser';
 import LogbookPluginInterface from 'main';
 import TimeWidget from 'widgets/time_widget';
 import { moment } from 'obsidian';
-import { getAllWorkflowStatuses, getWorkflowStatus } from 'tasks/task';
+import { getAllWorkflowStatuses } from 'tasks/task';
 
 interface LogbookFieldState {
     decorations: DecorationSet;

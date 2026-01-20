@@ -160,7 +160,7 @@ function updateLogbook(
     // Parse the logbook, or create a new one.
     const parseAdapter = new TextParseAdapter(doc);
     let logbook = logbookParser.parse(parseAdapter, logbookFrom);
-    
+
     let outputPrefix = '';
     let outputSuffix = '';
     
@@ -190,6 +190,13 @@ function updateLogbook(
         if (openClock) {
             openClock.endTime = moment();
         }
+    }
+
+    if ((logbook?.lines?.length ?? 0) <= 0) {
+        return {
+            changes: [],
+            effects: []
+        };
     }
 
     const newBlock = outputPrefix + logbook.toString(indentation) + outputSuffix;

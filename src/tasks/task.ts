@@ -22,6 +22,7 @@ export interface WorkflowRange {
 }
 
 export interface WorkflowStatus {
+    from: number;
     offset: number;
     currentState?: string;
     currentStateRange?: WorkflowRange;
@@ -74,12 +75,12 @@ export function getWorkflowStates(): string[] {
     return Object.keys(taskWorkflow);
 }
 
-export function getWorkflowRegex(): RegExp {
+export function getWorkflowRegex(flags: string = 'gd'): RegExp {
     let states = getWorkflowStates().join('|');
     // eslint-disable-next-line no-useless-escape
-    const r = `^(?<offset>\\\s*)(?<list>- )(?:(\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
+    const r = `^(?<offset>[ \\\t]*)(?<list>- )(?:(\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
 
-    return new RegExp(r, 'gd');
+    return new RegExp(r, flags);
 }
 
 export function findWorkflowState(
@@ -87,6 +88,27 @@ export function findWorkflowState(
 ): WorkflowState|undefined
 {
     return Object.values(taskWorkflow).find(predicate);
+}
+
+export function getAllWorkflowStatuses(
+    document: string,
+    offset: number = 0
+): WorkflowStatus[]
+{
+    let result: WorkflowStatus[] = [];
+
+    const regex = getWorkflowRegex('gdm');
+
+    const matches = document.matchAll(regex);
+
+    for (const match of matches) {
+        const status = getWorkflowStatus(match[0], offset + match.index);
+        if (status) {
+            result.push(status);
+        }
+    }
+
+    return result;
 }
 
 export function getWorkflowStatus(
@@ -111,6 +133,7 @@ export function getWorkflowStatus(
         const matchOffset = match.indices?.groups?.['offset']?.[1] ?? 0;
 
         let result: WorkflowStatus = {
+            from: offset + index,
             offset: matchOffset,
             currentStateRange: {
                 from: offset + index,

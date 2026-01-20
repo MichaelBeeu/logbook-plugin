@@ -5,7 +5,7 @@ import LogbookParser from 'logbook/logbook_parser';
 import LogbookPluginInterface from 'main';
 import TimeWidget from 'widgets/time_widget';
 import { moment } from 'obsidian';
-import { getWorkflowStatus } from 'tasks/task';
+import { getAllWorkflowStatuses, getWorkflowStatus } from 'tasks/task';
 
 interface LogbookFieldState {
     decorations: DecorationSet;
@@ -33,27 +33,15 @@ export function logbookField(
             const parseAdapter = new TextParseAdapter(doc);
             const parser = new LogbookParser(moment);
 
-            const books = parser.parseAll(parseAdapter);
+            // Get all the workflows in the document.
+            const tasks = getAllWorkflowStatuses(doc.toString());
 
-            for (const book of books) {
-                const from = book.from - 1;
-                
-                const parentLine = doc.lineAt(from);
-                const { text: parentText } = parentLine;
-                const taskState = getWorkflowStatus(parentText, parentLine.from);
-
-                atomicBuilder.add(
-                    from,
-                    from,
-                    Decoration.widget({
-                        widget: new TimeWidget(book, plugin, taskState),
-                    })
-                );
-                
-                if (taskState?.currentStateRange) {
+            for (const task of tasks) {
+                // If we have a current status, then mark it.
+                if (task?.currentStateRange) {
                     builder.add(
-                        taskState?.currentStateRange?.from,
-                        taskState.currentStateRange.to,
+                        task?.currentStateRange?.from,
+                        task.currentStateRange.to,
                         Decoration.mark({
                             attributes: {
                                 style: "font-weight: bold",
@@ -64,15 +52,35 @@ export function logbookField(
                         })
                     );
                 }
-                
-                if (plugin.settings.hideLogbooks) {
+
+                // Get the line the task is on.
+                const taskLine = doc.lineAt(task.from);
+                // Parse the logbook following.
+                const book = parser.parse(parseAdapter, taskLine.number + 1);
+
+                // If this is a valid logbook, then add widgets/styles.
+                if (book) {
+                    const from = book.from - 1;
+
+                    // Add the time widget.
                     atomicBuilder.add(
-                        book.from,
-                        book.to + 1,
-                        Decoration.replace({
-                            block: true,
+                        from,
+                        from,
+                        Decoration.widget({
+                            widget: new TimeWidget(book, plugin, task),
                         })
                     );
+                    
+                    // If logbooks should be hidden, then hide this one.
+                    if (plugin.settings.hideLogbooks) {
+                        atomicBuilder.add(
+                            book.from,
+                            book.to + 1,
+                            Decoration.replace({
+                                block: true,
+                            })
+                        );
+                    }
                 }
             }
 

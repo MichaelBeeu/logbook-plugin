@@ -1,17 +1,18 @@
 .logbook-time {
+    font-family: monospace;
+    white-space: pre;
+    margin-block: 1em 1em;
+    margin-inline: 0px;
     opacity: 0.5;
-
     transition: 0.25s ease all;
-
     margin: 0 0 0 0.5em;
-    
     display: inline-block;
-}
-
-.logbook-time-right {
-    float: right;
 }
 
 .logbook-time:hover {
     opacity: 1;
+}
+
+.logbook-time-right {
+    float: right;
 }

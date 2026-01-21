@@ -120,3 +120,21 @@ export class StringParseAdapter implements ParseAdapterInterface {
         throw new RangeError(`Line ${n} does not exist in document with ${this.lines} lines.`);
     }
 }
+
+export class NodeArrayParseAdapter implements ParseAdapterInterface {
+    #nodes: Node[];
+
+    constructor(nodes: Node[]) {
+        this.#nodes = nodes;
+    }
+
+    get lines(): number {
+        return this.#nodes.length;
+    }
+
+    line(n: number): ParseLine {
+        const node = this.#nodes[n - 1];
+        const content = (node?.textContent?.trim() ?? '');
+        return new ParseLine(1, 1, n, content);
+    }
+}

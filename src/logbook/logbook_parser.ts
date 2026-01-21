@@ -48,7 +48,7 @@ export default class LogbookParser {
 
             if (mode == 'scan') {
                 // Check if this is the start of a logbook drawer.
-                const isLogbookDrawer = text.match(logbookDrawerRe) !== null && n > 1;
+                const isLogbookDrawer = text.match(logbookDrawerRe) !== null && n >= 1;
 
                 if (isLogbookDrawer) {
                     pendingLogbook.from = line.from;

@@ -124,13 +124,25 @@ export class Logbook {
         return this.lines == other.lines;
     }
 
-    getTotalDuration(): Moment.Duration {
-        return this.lines.reduce(
+    getTotalDuration(calculateIncomplete: boolean = false): Moment.Duration {
+        let result = this.lines.reduce(
             (total, line) => {
                 return total.add(this.#ensureLineComplete(line).duration ?? this.#moment.duration(0));
             },
             this.#moment.duration(0)
         );
+
+        if (calculateIncomplete) {
+            // Look for an open clock. This would not be included in the previous
+            // calculation because it lacks an endTime.
+            const openClock = this.getOpenClock();
+            if (openClock) {
+                const now = this.#moment();
+                result.add(this.#moment.duration(now.diff(openClock.startTime)));
+            }
+        }
+
+        return result;
     }
 
     hasOpenClock(): boolean {
@@ -142,11 +154,20 @@ export class Logbook {
     }
 
     #ensureLineComplete(line: LogbookLine): LogbookLine {
-        if (line.duration === undefined && line.endTime !== undefined) {
-            line.duration = this.#moment.duration(line.endTime.diff(line.startTime));
+        // Clone the line.
+        const result: LogbookLine = new LogbookLine(
+            line.startTime,
+            line.endTime,
+            line.duration,
+            line.from,
+            line.to
+        );
+
+        if (result.duration === undefined && result.endTime !== undefined) {
+            result.duration = this.#moment.duration(result.endTime.diff(result.startTime));
         }
 
-        return line;
+        return result;
     }
 
     toString(indentation?: number): string {

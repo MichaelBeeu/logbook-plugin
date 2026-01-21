@@ -1,7 +1,6 @@
 import { EditorView, WidgetType } from "@codemirror/view";
 import { Logbook } from "logbook/logbook";
 import LogbookPlugin from "main";
-import { moment } from "obsidian";
 import { WorkflowStatus } from "tasks/task";
 import { formatLogbookDuration } from "utils";
 
@@ -55,15 +54,11 @@ export default class TimeWidget extends WidgetType
     }
 
     #getTotalDuration() {
-        let duration = this.#logbook.getTotalDuration();
+        let duration = this.#logbook.getTotalDuration(true);
         const openClock = this.#logbook.getOpenClock();
         let icon = this.#plugin.settings.icons.paused;
 
         if (openClock !== undefined) {
-            const now = moment();
-            const diff = now.diff(openClock.startTime);
-            duration.add(diff);
-
             icon = this.#plugin.settings.icons.open;
         } else if (this.#workflowState?.currentWorkflowState?.checkbox !== ' ') {
             icon = this.#plugin.settings.icons.done;

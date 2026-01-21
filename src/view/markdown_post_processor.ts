@@ -67,7 +67,7 @@ export function markdownPostProcessor(
                     const book = parser.parse(parseAdapter);
 
                     // Get the current time spent.
-                    const duration = book?.getTotalDuration();
+                    const duration = book?.getTotalDuration(true);
 
                     if (duration && evictList[0] && node.parentElement instanceof HTMLElement) {
                         const timer = node.parentElement.createEl('div', {

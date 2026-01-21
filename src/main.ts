@@ -8,9 +8,12 @@ import { logbookViewUpdateListener } from 'editor/updateListener';
 import { StringParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';
 import { getWorkflowStatus } from 'tasks/task';
+import { markdownPostProcessor } from 'view/markdown_post_processor';
 
 
 export interface LogbookPluginInterface {
+	settings: LogbookPluginSettings;
+
 	addLogbookFile(file: TFile): void;
 	closeAllLogbookFiles(): Promise<void>;
 	loadSettings(): Promise<void>;
@@ -61,6 +64,8 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 				);
 			}
 		});
+
+		this.registerMarkdownPostProcessor(markdownPostProcessor(this));
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new LogbookSettingTab(this.app, this));

@@ -2,7 +2,7 @@ import { ChangeSet, ChangeSpec, EditorState, Extension, StateEffect, Text, Trans
 import { moment } from "obsidian";
 import { Logbook, LogbookLine } from "logbook/logbook";
 import LogbookParser from "logbook/logbook_parser";
-import { findWorkflowState, getWorkflowState, getWorkflowStates, getWorkflowStatus, WorkflowState } from "tasks/task";
+import type { WorkflowState } from "tasks/task";
 import { isRangeOverlap } from "utils";
 import LogbookPluginInterface from "main";
 import { TextParseAdapter } from "logbook/parse_adapter";
@@ -28,7 +28,7 @@ export function logbookTransactionFilter(
             const newDoc = transaction.newDoc;
 
             // Get the list of valid states.
-            const workflowStates = getWorkflowStates();
+            const workflowStates = plugin.taskParser.getWorkflowStates();
 
             transaction.changes.iterChanges(
                 (fromA: number, toA: number, fromB: number, toB: number, inserted: Text): void => {
@@ -43,7 +43,7 @@ export function logbookTransactionFilter(
                     const { text } = line;
 
                     // Get current state.
-                    const state = getWorkflowStatus(text, line.from);
+                    const state = plugin.taskParser.getWorkflowStatus(text, line.from);
 
                     if (state === null) {
                         return;
@@ -55,7 +55,7 @@ export function logbookTransactionFilter(
 
                     // Update the state if the checkbox value has changed.
                     if (state.checkboxValueRange && state.currentState && isRangeOverlap(state.checkboxValueRange.from, state.checkboxValueRange.to, fromB, toB)) {
-                        stateDesc = findWorkflowState((s) => s.checkbox === state.checkboxValue);
+                        stateDesc = plugin.taskParser.findWorkflowState((s) => s.checkbox === state.checkboxValue);
                         if (stateDesc) {
                             changes.push({
                                 from: state.currentStateRange?.from ?? line.from,
@@ -72,7 +72,7 @@ export function logbookTransactionFilter(
                         // Is this a valid state?
                         if (workflowStates.contains(newState)) {
                             // Get state data.
-                            stateDesc = getWorkflowState(newState);
+                            stateDesc = plugin.taskParser.getWorkflowState(newState);
                             // Get checkbox value.
                             const checkbox = stateDesc?.checkbox;
 

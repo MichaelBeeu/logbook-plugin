@@ -33,7 +33,7 @@ export interface WorkflowStatus {
     indentation?: number;
 }
 
-const taskWorkflow: Workflow = {
+const defaultTaskWorkflow: Workflow = {
     "TODO": {
         name: "TODO",
         next: "DOING",
@@ -67,153 +67,164 @@ const taskWorkflow: Workflow = {
     },
 };
 
-export function getWorkflowState(state: string): WorkflowState|undefined {
-    return taskWorkflow[state];
-}
-
-export function getWorkflowStates(): string[] {
-    return Object.keys(taskWorkflow);
-}
-
-export function getWorkflowRegex(flags: string = 'gd'): RegExp {
-    let states = getWorkflowStates().join('|');
-    // eslint-disable-next-line no-useless-escape
-    const r = `^(?<offset>[ \\\t]*)(?<list>- )(?:(\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
-
-    return new RegExp(r, flags);
-}
-
-export function findWorkflowState(
-    predicate: (status: WorkflowState) => boolean
-): WorkflowState|undefined
+export class TaskParser
 {
-    return Object.values(taskWorkflow).find(predicate);
-}
+    #taskWorkflow: Workflow = defaultTaskWorkflow;
 
-export function getAllWorkflowStatuses(
-    document: string,
-    offset: number = 0
-): WorkflowStatus[]
-{
-    let result: WorkflowStatus[] = [];
+    setTaskWorkflow(taskWorkflow: Workflow): this {
+        this.#taskWorkflow = taskWorkflow;
 
-    const regex = getWorkflowRegex('gdm');
-
-    const matches = document.matchAll(regex);
-
-    for (const match of matches) {
-        const status = getWorkflowStatus(match[0], offset + match.index);
-        if (status) {
-            result.push(status);
-        }
+        return this;
     }
 
-    return result;
-}
-
-export function getWorkflowStatus(
-    line: string,
-    offset: number
-): WorkflowStatus|null
-{
-    const logbookMatch = line.match(/^\s*(:LOGBOOK:$|CLOCK:|:END:$)/);
-
-    if (logbookMatch !== null) {
-        return null;
+    getWorkflowState(state: string): WorkflowState|undefined {
+        return this.#taskWorkflow[state];
     }
 
-    const regex = getWorkflowRegex();
+    getWorkflowStates(): string[] {
+        return Object.keys(this.#taskWorkflow);
+    }
 
-    const match = regex.exec(line) as RegExpMatchArrayWithIndices;
+    getWorkflowRegex(flags: string = 'gd'): RegExp {
+        let states = this.getWorkflowStates().join('|');
+        // eslint-disable-next-line no-useless-escape
+        const r = `^(?<offset>[ \\\t]*)(?<list>- )(?:(\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?`;
 
-    if (match !== null) {
-        const index = match.index ?? 0;
-        const checkboxValue = match.groups?.['checkbox'];
+        return new RegExp(r, flags);
+    }
 
-        const matchOffset = match.indices?.groups?.['offset']?.[1] ?? 0;
+    findWorkflowState(
+        predicate: (status: WorkflowState) => boolean
+    ): WorkflowState|undefined
+    {
+        return Object.values(this.#taskWorkflow).find(predicate);
+    }
 
-        let result: WorkflowStatus = {
-            from: offset + index,
-            offset: matchOffset,
-            currentStateRange: {
-                from: offset + index,
-                to: offset + index,
-            },
-            indentation: match.groups?.['offset']?.length ?? 0,
-        };
+    getAllWorkflowStatuses(
+        document: string,
+        offset: number = 0
+    ): WorkflowStatus[]
+    {
+        let result: WorkflowStatus[] = [];
 
-        if (match.indices?.groups?.['list']) {
-            result.listRange = {
-                from: offset + (match.indices?.groups?.['list']?.[0] ?? index),
-                to: offset + (match.indices?.groups?.['list']?.[1] ?? index),
-            };
-            result.currentStateRange = {
-                from: offset + (match.indices?.groups?.['list']?.[1] ?? index),
-                to: offset + (match.indices?.groups?.['list']?.[1] ?? index),
-            };
-        }
+        const regex = this.getWorkflowRegex('gdm');
 
-        if (checkboxValue) {
-            const checkboxIndices = match?.indices?.groups?.['checkbox'] ?? [0, 0];
-            const checkboxFrom = checkboxIndices[0];
-            const checkboxTo = checkboxIndices[1];
-            result.checkboxValue = match?.groups?.['checkbox'];
-            result.checkboxValueRange = {
-                from: offset + checkboxFrom,
-                to: offset + checkboxTo,
-            };
+        const matches = document.matchAll(regex);
 
-            result.currentStateRange = {
-                from: result.checkboxValueRange.to + 2,
-                to: result.checkboxValueRange.to + 2,
-            };
-        }
-
-        const stateValue = match.groups?.['state'];
-        if (stateValue) {
-            const stateIndices = match?.indices?.groups?.['state'] ?? [0, 0];
-            const stateFrom = stateIndices[0];
-            const stateTo = stateIndices[1];
-            result.currentState = stateValue;
-            result.currentWorkflowState = getWorkflowState(stateValue);
-            result.currentStateRange = {
-                from: offset + stateFrom,
-                to: offset + stateTo,
+        for (const match of matches) {
+            const status = this.getWorkflowStatus(match[0], offset + match.index);
+            if (status) {
+                result.push(status);
             }
         }
 
         return result;
     }
 
-    return null;
-}
+    getWorkflowStatus(
+        line: string,
+        offset: number
+    ): WorkflowStatus|null
+    {
+        const logbookMatch = line.match(/^\s*(:LOGBOOK:$|CLOCK:|:END:$)/);
 
-export function proceedWorkflow(currentState?: string): WorkflowResult|null {
-    if (!currentState) {
-        const name = Object.keys(taskWorkflow)[0];
+        if (logbookMatch !== null) {
+            return null;
+        }
 
-        if (name && name in taskWorkflow) {
-            return {
-                name: name,
-                state: taskWorkflow[name]!,
+        const regex = this.getWorkflowRegex();
+
+        const match = regex.exec(line) as RegExpMatchArrayWithIndices;
+
+        if (match !== null) {
+            const index = match.index ?? 0;
+            const checkboxValue = match.groups?.['checkbox'];
+
+            const matchOffset = match.indices?.groups?.['offset']?.[1] ?? 0;
+
+            let result: WorkflowStatus = {
+                from: offset + index,
+                offset: matchOffset,
+                currentStateRange: {
+                    from: offset + index,
+                    to: offset + index,
+                },
+                indentation: match.groups?.['offset']?.length ?? 0,
             };
+
+            if (match.indices?.groups?.['list']) {
+                result.listRange = {
+                    from: offset + (match.indices?.groups?.['list']?.[0] ?? index),
+                    to: offset + (match.indices?.groups?.['list']?.[1] ?? index),
+                };
+                result.currentStateRange = {
+                    from: offset + (match.indices?.groups?.['list']?.[1] ?? index),
+                    to: offset + (match.indices?.groups?.['list']?.[1] ?? index),
+                };
+            }
+
+            if (checkboxValue) {
+                const checkboxIndices = match?.indices?.groups?.['checkbox'] ?? [0, 0];
+                const checkboxFrom = checkboxIndices[0];
+                const checkboxTo = checkboxIndices[1];
+                result.checkboxValue = match?.groups?.['checkbox'];
+                result.checkboxValueRange = {
+                    from: offset + checkboxFrom,
+                    to: offset + checkboxTo,
+                };
+
+                result.currentStateRange = {
+                    from: result.checkboxValueRange.to + 2,
+                    to: result.checkboxValueRange.to + 2,
+                };
+            }
+
+            const stateValue = match.groups?.['state'];
+            if (stateValue) {
+                const stateIndices = match?.indices?.groups?.['state'] ?? [0, 0];
+                const stateFrom = stateIndices[0];
+                const stateTo = stateIndices[1];
+                result.currentState = stateValue;
+                result.currentWorkflowState = this.getWorkflowState(stateValue);
+                result.currentStateRange = {
+                    from: offset + stateFrom,
+                    to: offset + stateTo,
+                }
+            }
+
+            return result;
         }
 
         return null;
     }
 
-    if (!(currentState in taskWorkflow)) {
-        return null;
-    }
+    proceedWorkflow(currentState?: string): WorkflowResult|null {
+        if (!currentState) {
+            const name = Object.keys(this.#taskWorkflow)[0];
 
-    const state = taskWorkflow[currentState];
-    const next = state?.next;
-    if (!next || !(next in taskWorkflow)) {
-        return null;
-    }
+            if (name && name in this.#taskWorkflow) {
+                return {
+                    name: name,
+                    state: this.#taskWorkflow[name]!,
+                };
+            }
 
-    return {
-        name: next,
-        state: taskWorkflow[next]!,
-    };
+            return null;
+        }
+
+        if (!(currentState in this.#taskWorkflow)) {
+            return null;
+        }
+
+        const state =this. #taskWorkflow[currentState];
+        const next = state?.next;
+        if (!next || !(next in this.#taskWorkflow)) {
+            return null;
+        }
+
+        return {
+            name: next,
+            state: this.#taskWorkflow[next]!,
+        };
+    }
 }

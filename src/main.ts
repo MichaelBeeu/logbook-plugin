@@ -7,12 +7,14 @@ import { logbookFoldService } from 'editor/fold';
 import { logbookViewUpdateListener } from 'editor/updateListener';
 import { StringParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';
-import { getWorkflowStatus } from 'tasks/task';
+import { TaskParser } from 'tasks/task';
 import { markdownPostProcessor } from 'view/markdown_post_processor';
 
 
 export interface LogbookPluginInterface {
 	settings: LogbookPluginSettings;
+
+	taskParser: TaskParser;
 
 	addLogbookFile(file: TFile): void;
 	closeAllLogbookFiles(): Promise<void>;
@@ -22,6 +24,8 @@ export interface LogbookPluginInterface {
 
 export default class LogbookPlugin extends Plugin implements LogbookPluginInterface {
 	settings: LogbookPluginSettings;
+
+	taskParser: TaskParser = new TaskParser();
 
 	logbookFiles: Set<TFile> = new Set();
 
@@ -108,7 +112,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			const line = pa.line(n);
 			const { text } = line;
 
-			const workflowStatus = getWorkflowStatus(text, line.from);
+			const workflowStatus = this.taskParser.getWorkflowStatus(text, line.from);
 
 			if (workflowStatus) {
 				const book = lp.parse(pa, n + 1);

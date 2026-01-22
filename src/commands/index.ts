@@ -1,7 +1,6 @@
 import { EditorView } from "@codemirror/view";
 import LogbookPluginInterface from "main";
 import { Editor, EditorChange, MarkdownView} from "obsidian";
-import { getWorkflowStatus, proceedWorkflow } from "tasks/task";
 
 export function toggleClock(
     plugin: LogbookPluginInterface
@@ -27,11 +26,11 @@ export function toggleClock(
                 }
 
                 // Get the current workflow status of the line.
-                const status = getWorkflowStatus(text, line.from);
+                const status = plugin.taskParser.getWorkflowStatus(text, line.from);
 
                 if (status) {
                     // Compute the next state.
-                    const nextState = proceedWorkflow(status.currentState);
+                    const nextState = plugin.taskParser.proceedWorkflow(status.currentState);
                     // When adding a state to an existing line we must ensure there is a space added
                     // between the state name and the existing text.
                     const stateSuffix = (status.currentState) ? '' : ' ';

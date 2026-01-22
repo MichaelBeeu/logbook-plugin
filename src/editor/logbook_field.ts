@@ -5,7 +5,6 @@ import LogbookParser from 'logbook/logbook_parser';
 import LogbookPluginInterface from 'main';
 import TimeWidget from 'widgets/time_widget';
 import { moment } from 'obsidian';
-import { getAllWorkflowStatuses } from 'tasks/task';
 
 interface LogbookFieldState {
     decorations: DecorationSet;
@@ -34,7 +33,7 @@ export function logbookField(
             const parser = new LogbookParser(moment);
 
             // Get all the workflows in the document.
-            const tasks = getAllWorkflowStatuses(doc.toString());
+            const tasks = plugin.taskParser.getAllWorkflowStatuses(doc.toString());
 
             for (const task of tasks) {
                 // If we have a current status, then mark it.

@@ -1,4 +1,4 @@
-import { StateField, Transaction, Extension, RangeSetBuilder, RangeSet } from '@codemirror/state';
+import { StateField, Transaction, Extension, RangeSetBuilder, RangeSet, Text } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { TextParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';
@@ -8,93 +8,83 @@ import { moment } from 'obsidian';
 
 interface LogbookFieldState {
     decorations: DecorationSet;
-    atomicDecorations: DecorationSet;
 };
 
 export function logbookField(
     plugin: LogbookPluginInterface
 ): Extension {
-    return StateField.define<LogbookFieldState>({
-        create(state):  LogbookFieldState {
-            return {
-                decorations: Decoration.none,
-                atomicDecorations: Decoration.none,
-            };
-        },
-        update(oldState: LogbookFieldState, transaction: Transaction): LogbookFieldState {
-            const builder = new RangeSetBuilder<Decoration>();
-            const atomicBuilder = new RangeSetBuilder<Decoration>();
+    function process(doc: Text): LogbookFieldState {
+        const builder = new RangeSetBuilder<Decoration>();
 
-            const { state } = transaction;
+        const parseAdapter = new TextParseAdapter(doc);
+        const parser = new LogbookParser(moment);
 
-            const { doc } = state;
+        // Get all the workflows in the document.
+        const tasks = plugin.taskParser.getAllWorkflowStatuses(doc.toString());
 
-            const parseAdapter = new TextParseAdapter(doc);
-            const parser = new LogbookParser(moment);
+        for (const task of tasks) {
+            // Get the line the task is on.
+            const taskLine = doc.lineAt(task.from);
+            // Parse the logbook following.
+            const book = parser.parse(parseAdapter, taskLine.number + 1);
 
-            // Get all the workflows in the document.
-            const tasks = plugin.taskParser.getAllWorkflowStatuses(doc.toString());
+            // If this is a valid logbook, then add widgets/styles.
+            if (book) {
+                const from = book.from - 1;
 
-            for (const task of tasks) {
-                // If we have a current status, then mark it.
-                if (task?.currentStateRange) {
+                // Add the time widget.
+                builder.add(
+                    from,
+                    from,
+                    Decoration.widget({
+                        widget: new TimeWidget(book, plugin, task),
+                    })
+                );
+                
+                // If logbooks should be hidden, then hide this one.
+                if (plugin.settings.hideLogbooks) {
                     builder.add(
-                        task?.currentStateRange?.from,
-                        task.currentStateRange.to,
-                        Decoration.mark({
-                            attributes: {
-                                style: "font-weight: bold",
-                                // Disable spellcheck on the task state, as it should be valid even
-                                // if not in the dictionary.
-                                spellcheck: "false",
-                            }
+                        book.from,
+                        book.to + 1,
+                        Decoration.replace({
+                            block: true,
                         })
                     );
-                }
-
-                // Get the line the task is on.
-                const taskLine = doc.lineAt(task.from);
-                // Parse the logbook following.
-                const book = parser.parse(parseAdapter, taskLine.number + 1);
-
-                // If this is a valid logbook, then add widgets/styles.
-                if (book) {
-                    const from = book.from - 1;
-
-                    // Add the time widget.
-                    atomicBuilder.add(
-                        from,
-                        from,
-                        Decoration.widget({
-                            widget: new TimeWidget(book, plugin, task),
-                        })
-                    );
-                    
-                    // If logbooks should be hidden, then hide this one.
-                    if (plugin.settings.hideLogbooks) {
-                        atomicBuilder.add(
-                            book.from,
-                            book.to + 1,
-                            Decoration.replace({
-                                block: true,
-                            })
-                        );
-                    }
                 }
             }
+        }
 
-            return {
-                decorations: builder.finish(),
-                atomicDecorations: atomicBuilder.finish(),
-            };
+        return {
+            decorations: builder.finish(),
+        };
+    };
+
+    return StateField.define<LogbookFieldState>({
+        create(state):  LogbookFieldState {
+            const { doc } = state;
+            // Create initial state.
+            return process(doc);
+        },
+
+        update(oldState: LogbookFieldState, transaction: Transaction): LogbookFieldState {
+            if (!transaction.docChanged) {
+                return oldState;
+            }
+
+            const { state: {
+                doc
+            } } = transaction;
+
+            return process(doc);
+
         },
         provide(field: StateField<LogbookFieldState>): Extension {
             return [
                 EditorView.decorations.from(field, (t: LogbookFieldState) => {
-                    return (RangeSet<Decoration>).join([t.decorations, t.atomicDecorations]);
+                    return (RangeSet<Decoration>).join([t.decorations]);
                 }),
                 EditorView.atomicRanges.of(
-                    v => v.state.field(field).atomicDecorations
+                    v => v.state.field(field).decorations
                 )
             ];
         }

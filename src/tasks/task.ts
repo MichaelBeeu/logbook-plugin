@@ -7,6 +7,7 @@ export interface WorkflowState {
     next: string;
     checkbox: string;
     clockState: ClockState;
+    cssClass: string;
 }
 
 type Workflow = Record<string, WorkflowState>;
@@ -31,6 +32,7 @@ export interface WorkflowStatus {
     listRange?: WorkflowRange;
     currentWorkflowState?: WorkflowState;
     indentation?: number;
+    workflow?: WorkflowState;
 }
 
 const defaultTaskWorkflow: Workflow = {
@@ -39,18 +41,21 @@ const defaultTaskWorkflow: Workflow = {
         next: "DOING",
         checkbox: ' ',
         clockState: 'closed',
+        cssClass: 'logbook-task-state-paused',
     },
     "DOING": {
         name: "DOING",
         next: "DONE",
         checkbox: ' ',
         clockState: 'open',
+        cssClass: 'logbook-task-state-inprogress',
     },
     "DONE": {
         name: "DONE",
         next: "TODO",
         checkbox: 'x',
         clockState: 'closed',
+        cssClass: 'logbook-task-state-done',
     },
 
     "LATER": {
@@ -58,12 +63,14 @@ const defaultTaskWorkflow: Workflow = {
         next: "NOW",
         checkbox: ' ',
         clockState: 'closed',
+        cssClass: 'logbook-task-state-paused',
     },
     "NOW": {
         name: "NOW",
         next: "DONE",
         checkbox: ' ',
         clockState: 'open',
+        cssClass: 'logbook-task-state-inprogress',
     },
 };
 
@@ -185,6 +192,7 @@ export class TaskParser
                 const stateFrom = stateIndices[0];
                 const stateTo = stateIndices[1];
                 result.currentState = stateValue;
+                result.workflow = this.getWorkflowState(stateValue);
                 result.currentWorkflowState = this.getWorkflowState(stateValue);
                 result.currentStateRange = {
                     from: offset + stateFrom,

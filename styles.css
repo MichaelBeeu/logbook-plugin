@@ -16,3 +16,37 @@
 .logbook-time-right {
     float: right;
 }
+
+.logbook-task-state {
+    --task-color-base: gray;
+    --task-color: var(--task-color-base);
+
+    font-weight: bold;
+
+    padding: 0 0.25em;
+    background: color-mix(in srgb, var(--task-color), transparent 25%);
+    border-radius: 4px;
+    /* Using box shadow as it should not affect size of elements, and
+    should appear below all other elements. */
+    box-shadow: 0 0 0 1px var(--task-color);
+
+    cursor: pointer;
+
+    transition: 0.25s ease all;
+}
+
+.logbook-task-state:hover {
+    --task-color: color-mix(in srgb, var(--task-color-base), transparent 5%);
+}
+
+.logbook-task-state-paused {
+    --task-color-base: blue;
+}
+
+.logbook-task-state-inprogress {
+    --task-color-base: red;
+}
+
+.logbook-task-state-done {
+    --task-color-base: green;
+}

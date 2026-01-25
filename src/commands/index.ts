@@ -38,13 +38,3 @@ export function closeAllOpenClocks(
         await plugin.closeAllLogbookFiles();
     };
 };
-
-export function toggleHideLogbooks(
-    plugin: LogbookPluginInterface
-) {
-    return async function (editor: Editor, view: MarkdownView) {
-        plugin.settings.hideLogbooks = !plugin.settings.hideLogbooks;
-        
-        await plugin.saveSettings();
-    }
-}

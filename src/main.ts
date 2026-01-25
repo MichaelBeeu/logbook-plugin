@@ -1,7 +1,7 @@
 import { Plugin, TFile, Tasks, moment } from 'obsidian';
 import { ChangeSpec } from '@codemirror/state';
 import { DEFAULT_SETTINGS, LogbookPluginSettings, LogbookSettingTab } from "./settings";
-import { closeAllOpenClocks, toggleClock, toggleHideLogbooks } from 'commands';
+import { closeAllOpenClocks, toggleClock } from 'commands';
 import { logbookTransactionFilter } from 'editor/transactions';
 import { logbookFoldService } from 'editor/fold';
 import { logbookFoldListener } from 'editor/update_listener';
@@ -54,12 +54,6 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			id: 'close-clocks',
 			name: 'Close all open clocks',
 			editorCallback: closeAllOpenClocks(this),
-		});
-		
-		this.addCommand({
-			id: 'toggle-hide-logbooks',
-			name: 'Toggle showing logbooks',
-			editorCallback: toggleHideLogbooks(this),
 		});
 
 		this.app.workspace.on('quit', (tasks: Tasks) => {

@@ -23,9 +23,6 @@ export interface LogbookPluginSettings {
 	collapseLogbooks: boolean;
 	
 	// Should logbooks be hidden?
-	hideLogbooks: boolean;
-	
-	// Should logbooks be hidden?
 	hideLogbooksInReadMode: boolean;
 	
 	// What position should the task time widget be placed?
@@ -48,8 +45,6 @@ export const DEFAULT_SETTINGS: LogbookPluginSettings = {
 	
 	collapseLogbooks: true,
 	
-	hideLogbooks: false,
-
 	hideLogbooksInReadMode: true,
 	
 	timeWidgetPosition: "right",
@@ -113,13 +108,6 @@ export class LogbookSettingTab extends PluginSettingTab {
 					.setName('Collapse logbooks')
 					.setDesc(`Collapse all logbooks in the editor.`)
 					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'collapseLogbooks')) }
-			)
-			.addSetting(
-				setting => { setting
-					.setName('Hide logbooks')
-					.setDesc(`Hide logbooks from the editor.
-						This will make the editor look cleaner, but make manually editing log entries more difficult.`)
-					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'hideLogbooks')) }
 			)
 			.addSetting(
 				setting => { setting

@@ -24,6 +24,7 @@ export interface WorkflowRange {
 
 export interface WorkflowStatus {
     from: number;
+    to: number;
     offset: number;
     currentState?: string;
     currentStateRange?: WorkflowRange;
@@ -151,6 +152,7 @@ export class TaskParser
 
             let result: WorkflowStatus = {
                 from: offset + index,
+                to: offset + match[0].length,
                 offset: matchOffset,
                 currentStateRange: {
                     from: offset + index,

@@ -1,6 +1,7 @@
 import { EditorView, WidgetType } from "@codemirror/view";
 import { Logbook } from "logbook/logbook";
-import LogbookPlugin from "main";
+import { LogbookPluginInterface } from "main";
+import { Plugin } from "obsidian";
 import { WorkflowStatus } from "tasks/task";
 import { formatLogbookDuration } from "utils";
 
@@ -9,9 +10,9 @@ export default class TimeWidget extends WidgetType
     #logbook: Logbook;
     #interval: number|undefined = undefined;
     #workflowState: WorkflowStatus|null;
-    #plugin: LogbookPlugin;
+    #plugin: LogbookPluginInterface&Plugin;
 
-    constructor(logbook: Logbook, plugin: LogbookPlugin, workflowState: WorkflowStatus|null = null) {
+    constructor(logbook: Logbook, plugin: LogbookPluginInterface&Plugin, workflowState: WorkflowStatus|null = null) {
         super();
 
         this.#logbook = logbook;

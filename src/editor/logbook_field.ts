@@ -1,4 +1,4 @@
-import { StateField, Transaction, Extension, RangeSetBuilder, RangeSet, Text } from '@codemirror/state';
+import { StateField, Transaction, Extension, RangeSetBuilder, RangeSet, EditorState } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView } from '@codemirror/view';
 import { TextParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';
@@ -13,7 +13,8 @@ interface LogbookFieldState {
 export function logbookField(
     plugin: LogbookPluginInterface
 ): Extension {
-    function process(doc: Text): LogbookFieldState {
+    function process(state: EditorState): LogbookFieldState {
+        const { doc } = state;
         const builder = new RangeSetBuilder<Decoration>();
 
         const parseAdapter = new TextParseAdapter(doc);
@@ -40,17 +41,6 @@ export function logbookField(
                         widget: new TimeWidget(book, plugin, task),
                     })
                 );
-                
-                // If logbooks should be hidden, then hide this one.
-                if (plugin.settings.hideLogbooks) {
-                    builder.add(
-                        book.from,
-                        book.to + 1,
-                        Decoration.replace({
-                            block: true,
-                        })
-                    );
-                }
             }
         }
 
@@ -60,10 +50,9 @@ export function logbookField(
     };
 
     return StateField.define<LogbookFieldState>({
-        create(state):  LogbookFieldState {
-            const { doc } = state;
+        create(state: EditorState):  LogbookFieldState {
             // Create initial state.
-            return process(doc);
+            return process(state);
         },
 
         update(oldState: LogbookFieldState, transaction: Transaction): LogbookFieldState {
@@ -71,11 +60,9 @@ export function logbookField(
                 return oldState;
             }
 
-            const { state: {
-                doc
-            } } = transaction;
+            const { state } = transaction;
 
-            return process(doc);
+            return process(state);
 
         },
         provide(field: StateField<LogbookFieldState>): Extension {

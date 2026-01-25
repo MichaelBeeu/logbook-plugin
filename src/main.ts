@@ -5,13 +5,14 @@ import { logbookField } from 'editor/logbook_field';
 import { closeAllOpenClocks, toggleClock, toggleHideLogbooks } from 'commands';
 import { logbookTransactionFilter } from 'editor/transactions';
 import { logbookFoldService } from 'editor/fold';
-import { logbookViewUpdateListener } from 'editor/updateListener';
+import { logbookViewUpdateListener } from 'editor/update_listener';
 import { StringParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';
 import { TaskParser } from 'tasks/task';
 import { markdownPostProcessor } from 'view/markdown_post_processor';
 import { taskViewPlugin } from 'tasks/task_view_plugin';
 import { EditorView } from '@codemirror/view';
+import { logbookViewPlugin } from 'logbook/logbook_view_plugin';
 
 
 export interface LogbookPluginInterface {
@@ -42,6 +43,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			logbookViewUpdateListener(this),
 			logbookField(this),
 			logbookTransactionFilter(this),
+			logbookViewPlugin(this),
 		]);
 
 		this.addCommand({

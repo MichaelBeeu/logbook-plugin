@@ -37,7 +37,7 @@ export function taskViewPlugin(
 
     return ViewPlugin.fromClass(
         class {
-            decorations: DecorationSet
+            decorations: DecorationSet;
 
             constructor(view: EditorView) {
                 this.decorations = tasks(view);

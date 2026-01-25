@@ -6,14 +6,13 @@ import type { WorkflowState } from "tasks/task";
 import { isRangeOverlap } from "utils";
 import LogbookPluginInterface from "main";
 import { TextParseAdapter } from "logbook/parse_adapter";
-import { foldable, foldEffect } from "@codemirror/language";
 
 interface LogbookUpdateResult {
     changes: ChangeSpec[];
-    effects: StateEffect<{from: number, to: number}>[];
+    effects: StateEffect<{number: number}>[];
 };
 
-export const createLogbook = StateEffect.define<{from: number, to: number}>();
+export const createLogbook = StateEffect.define<{number: number}>();
 
 export function logbookTransactionFilter(
     plugin: LogbookPluginInterface
@@ -25,7 +24,7 @@ export function logbookTransactionFilter(
                 transaction,
             ];
             let changes: ChangeSpec[] = [];
-            let effects: StateEffect<{from: number, to: number}>[] = [];
+            let effects: StateEffect<{number: number}>[] = [];
             const { state } = transaction;
 
             // Get the new document.
@@ -53,6 +52,8 @@ export function logbookTransactionFilter(
                         return;
                     }
 
+                    let pos = workflow.to;
+
                     const newState = workflow.currentState ?? '';
 
                     let stateDesc: WorkflowState|undefined;
@@ -60,12 +61,19 @@ export function logbookTransactionFilter(
                     // Update the state if the checkbox value has changed.
                     if (workflow.checkboxValueRange && workflow.currentState && isRangeOverlap(workflow.checkboxValueRange.from, workflow.checkboxValueRange.to, fromB, toB)) {
                         stateDesc = plugin.taskParser.findWorkflowState((s) => s.checkbox === workflow.checkboxValue);
-                        if (stateDesc) {
+                        if (stateDesc && workflow.currentStateRange?.from) {
+                            const newState = stateDesc?.name ?? '';
+
                             changes.push({
-                                from: workflow.currentStateRange?.from ?? line.from,
-                                to: workflow.currentStateRange?.to ?? line.from,
-                                insert: stateDesc?.name ?? '',
+                                from: workflow.currentStateRange?.from,
+                                to: workflow.currentStateRange?.to,
+                                insert: newState,
                             });
+
+                            const oldLength = workflow.currentStateRange.to - workflow.currentStateRange.from;
+                            const newLength = newState.length;
+
+                            pos += (newLength - oldLength);
                         } else {
                             console.warn("No matching state found.", workflow.checkboxValue);
                         }
@@ -95,12 +103,17 @@ export function logbookTransactionFilter(
                                 const checkTo = workflow.checkboxValueRange?.to
                                     ?? workflow.listRange?.to
                                     ?? (line.from + workflow.offset);
+                                const insert = `- [${checkbox}] `;
+                                const oldLength = checkTo - checkFrom;
+                                const newLength = insert.length;
 
                                 changes.push({
                                     from: checkFrom,
                                     to: checkTo,
-                                    insert: `- [${checkbox}] `,
+                                    insert,
                                 });
+
+                                pos += (newLength - oldLength);
                             }
                         }
                     }
@@ -112,7 +125,8 @@ export function logbookTransactionFilter(
                             line.number,
                             stateDesc,
                             plugin.settings.matchIdentation ? workflow.offset : -1,
-                            state
+                            state,
+                            pos
                         );
 
                         changes = changes.concat(logbookChanges);
@@ -127,8 +141,6 @@ export function logbookTransactionFilter(
 
             if (changes.length > 0 || effects.length > 0) {
                 const changeSet = ChangeSet.of(changes, newDoc.length);
-
-                console.log('dispatching effects', effects);
 
                 transactions.push({
                     changes: changeSet,
@@ -149,7 +161,8 @@ function updateLogbook(
     lineNumber: number,
     workflow: WorkflowState,
     indentation: number,
-    state: EditorState
+    state: EditorState,
+    pos: number
 ): LogbookUpdateResult
 {
     const {
@@ -167,7 +180,7 @@ function updateLogbook(
 
     const logbookParser = new LogbookParser(moment);
 
-    const effects: StateEffect<{from: number, to: number}>[] = [];
+    const effects: StateEffect<{number: number}>[] = [];
 
     // Parse the logbook, or create a new one.
     const parseAdapter = new TextParseAdapter(doc);
@@ -183,12 +196,9 @@ function updateLogbook(
         if (logbookFrom <= doc.lines) {
             const line = doc.line(logbookFrom);
             position = line.from;
-            console.log('logbookFrom <= doc.lines', position, line);
         } else {
             outputPrefix = "\n";
-            console.log('logbookFrom > dock.lines');
         }
-        console.log('new logbook', position);
         logbook = new Logbook(moment, position, position);
         newLogbook = true;
         outputSuffix = "\n";
@@ -204,11 +214,9 @@ function updateLogbook(
             logbook.addLine(new LogbookLine( moment()));
 
             if (newLogbook) {
-                console.log('new logbook', logbook.from, logbook.to);
                 effects.push(
                     createLogbook.of({
-                        from: logbook.from,
-                        to: logbook.to
+                        number: logbookFrom
                     })
                 );
             }
@@ -227,14 +235,6 @@ function updateLogbook(
     }
 
     const newBlock = outputPrefix + logbook.toString(indentation) + outputSuffix;
-
-
-    // const fold = foldable(state, logbook.from, logbook.to - 1);
-    // const fold = foldable(state, logbook.from + 1, logbook.from + 1);
-    // if (fold) {
-    //     console.log('folding', logbook.from, logbook.to, fold);
-    //     effects.push(foldEffect.of(fold));
-    // }
 
     return {
         changes: [

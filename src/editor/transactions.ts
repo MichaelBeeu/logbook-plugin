@@ -25,7 +25,6 @@ export function logbookTransactionFilter(
             ];
             let changes: ChangeSpec[] = [];
             let effects: StateEffect<{number: number}>[] = [];
-            const { state } = transaction;
 
             // Get the new document.
             const newDoc = transaction.newDoc;
@@ -52,8 +51,6 @@ export function logbookTransactionFilter(
                         return;
                     }
 
-                    let pos = workflow.to;
-
                     const newState = workflow.currentState ?? '';
 
                     let stateDesc: WorkflowState|undefined;
@@ -69,11 +66,6 @@ export function logbookTransactionFilter(
                                 to: workflow.currentStateRange?.to,
                                 insert: newState,
                             });
-
-                            const oldLength = workflow.currentStateRange.to - workflow.currentStateRange.from;
-                            const newLength = newState.length;
-
-                            pos += (newLength - oldLength);
                         } else {
                             console.warn("No matching state found.", workflow.checkboxValue);
                         }
@@ -104,16 +96,12 @@ export function logbookTransactionFilter(
                                     ?? workflow.listRange?.to
                                     ?? (line.from + workflow.offset);
                                 const insert = `- [${checkbox}] `;
-                                const oldLength = checkTo - checkFrom;
-                                const newLength = insert.length;
 
                                 changes.push({
                                     from: checkFrom,
                                     to: checkTo,
                                     insert,
                                 });
-
-                                pos += (newLength - oldLength);
                             }
                         }
                     }
@@ -125,16 +113,10 @@ export function logbookTransactionFilter(
                             line.number,
                             stateDesc,
                             plugin.settings.matchIdentation ? workflow.offset : -1,
-                            state,
-                            pos
                         );
 
                         changes = changes.concat(logbookChanges);
                         effects = effects.concat(logbookEffects);
-
-                        // transactions.push({
-                        //     effects: logbookEffects,
-                        // });
                     }
                 }
             );
@@ -161,8 +143,6 @@ function updateLogbook(
     lineNumber: number,
     workflow: WorkflowState,
     indentation: number,
-    state: EditorState,
-    pos: number
 ): LogbookUpdateResult
 {
     const {

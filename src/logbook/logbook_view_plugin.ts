@@ -33,6 +33,8 @@ export function logbookViewPlugin(
                 // If logbooks should be hidden, then hide this one.
                 let hide = false;
 
+                // Look for a fold where this logbook is. If there is none found
+                // then assume the logbook is unfolded.
                 folds.between(
                     book.from,
                     book.to,
@@ -41,12 +43,15 @@ export function logbookViewPlugin(
                     }
                 );
 
+                // If the section should be hidden, then add a decoration to
+                // the set.
                 if (hide) {
+                    // TODO using a decoration here seems excessive.
+                    // There must be a better datatype to use.
                     builder.add(
                         book.from - 1,
                         book.to + 1,
-                        Decoration.mark({
-                        })
+                        Decoration.mark({})
                     );
                 }
             }

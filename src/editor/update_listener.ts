@@ -1,17 +1,24 @@
-import { foldable, foldEffect, unfoldEffect } from "@codemirror/language";
-import { Extension, StateEffect } from "@codemirror/state";
+import { foldable, foldEffect } from "@codemirror/language";
+import { Extension } from "@codemirror/state";
 import { EditorView, ViewUpdate } from "@codemirror/view";
 import LogbookPluginInterface from "main";
 import { createLogbook } from "./transactions";
 
-export function logbookViewUpdateListener(
+/*
+ * Look for new logbooks, and close them if configured to.
+ * 
+ * @param plugin Reference to the plugin instance.
+ * @returns 
+ */
+export function logbookFoldListener(
     plugin: LogbookPluginInterface,
 ): Extension {
     return EditorView.updateListener.of(
         (view: ViewUpdate) => {
-            const { view: editorView, state, transactions } = view;
-            const { doc } = state;
             if (view.docChanged && plugin.settings.collapseLogbooks) {
+                const { view: editorView, state, transactions } = view;
+                const { doc } = state;
+
                 for (const transaction of transactions) {
                     for (const effect of transaction.effects) {
                         if (effect.is(createLogbook)) {
@@ -21,41 +28,10 @@ export function logbookViewUpdateListener(
                             if (fold) {
                                 editorView.dispatch({
                                     effects: foldEffect.of(fold),
-                                    selection: state.selection,
                                 });
                             }
                         }
                     }
-                }
-            }
-
-            if (view.viewportChanged) {
-
-                // Ignore this update if any effect is an unfold effect.
-                for (const transaction of transactions) {
-                    for (const effect of transaction.effects) {
-                        if (effect.is(unfoldEffect)) {
-                            return;
-                        }
-                    }
-                }
-
-                const { from, to } = editorView.viewport;
-                const fromLine = doc.lineAt(from);
-                const toLine = doc.lineAt(to);
-                const effects: StateEffect<{from: number, to: number}>[] = [];
-
-                for (let n = fromLine.number; n <= toLine.number; ++n) {
-                    const line = doc.line(n);
-                    const { text } = line;
-
-                    if (text.match(/^\s*:LOGBOOK:$/) === null) {
-                        continue;
-                    }
-                }
-
-                if (effects.length > 0) {
-                    editorView.dispatch({ effects });
                 }
             }
         }

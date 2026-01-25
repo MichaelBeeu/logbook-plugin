@@ -5,7 +5,7 @@ import { logbookField } from 'editor/logbook_field';
 import { closeAllOpenClocks, toggleClock, toggleHideLogbooks } from 'commands';
 import { logbookTransactionFilter } from 'editor/transactions';
 import { logbookFoldService } from 'editor/fold';
-import { logbookViewUpdateListener } from 'editor/update_listener';
+import { logbookFoldListener } from 'editor/update_listener';
 import { StringParseAdapter } from 'logbook/parse_adapter';
 import LogbookParser from 'logbook/logbook_parser';
 import { TaskParser } from 'tasks/task';
@@ -40,10 +40,10 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 		this.registerEditorExtension([
 			taskViewPlugin(this),
 			logbookFoldService(this),
-			logbookViewUpdateListener(this),
 			logbookField(this),
 			logbookTransactionFilter(this),
 			logbookViewPlugin(this),
+			logbookFoldListener(this),
 		]);
 
 		this.addCommand({

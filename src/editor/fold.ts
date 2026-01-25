@@ -5,6 +5,12 @@ import { TextParseAdapter } from "logbook/parse_adapter";
 import LogbookPluginInterface from "main";
 import { moment } from 'obsidian';
 
+/**
+ * Return a service that provides fold regions for logbook blocks.
+ * 
+ * @param plugin Plugin instance
+ * @returns 
+ */
 export function logbookFoldService(
     plugin: LogbookPluginInterface
 ): Extension {

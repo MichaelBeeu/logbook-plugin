@@ -41,6 +41,16 @@ export function logbookField(
                         widget: new TimeWidget(book, plugin, task),
                     })
                 );
+
+                if (plugin.settings.hideLogbooks) {
+                    builder.add(
+                        book.from,
+                        book.to,
+                        Decoration.replace({
+                            block: true
+                        })
+                    );
+                }
             }
         }
 

@@ -1,7 +1,6 @@
 import { Plugin, TFile, Tasks, moment } from 'obsidian';
 import { ChangeSpec } from '@codemirror/state';
 import { DEFAULT_SETTINGS, LogbookPluginSettings, LogbookSettingTab } from "./settings";
-import { logbookField } from 'editor/logbook_field';
 import { closeAllOpenClocks, toggleClock, toggleHideLogbooks } from 'commands';
 import { logbookTransactionFilter } from 'editor/transactions';
 import { logbookFoldService } from 'editor/fold';
@@ -40,7 +39,6 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 		this.registerEditorExtension([
 			taskViewPlugin(this),
 			logbookFoldService(this),
-			logbookField(this),
 			logbookTransactionFilter(this),
 			logbookViewPlugin(this),
 			logbookFoldListener(this),

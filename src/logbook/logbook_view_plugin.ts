@@ -4,13 +4,20 @@ import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@
 import { LogbookPluginInterface } from "main";
 import { TextParseAdapter } from "./parse_adapter";
 import LogbookParser from "./logbook_parser";
-import { moment } from "obsidian";
+import { moment, Plugin } from "obsidian";
+import TimeWidget from "widgets/time_widget";
+
+interface LogbookViewState {
+    logbooks: DecorationSet,
+    times: DecorationSet,
+};
 
 export function logbookViewPlugin(
-    plugin: LogbookPluginInterface
+    plugin: LogbookPluginInterface&Plugin
 ) {
-    function logbooks(view: EditorView): DecorationSet {
-        const builder = new RangeSetBuilder<Decoration>();
+    function logbooks(view: EditorView): LogbookViewState {
+        const logbooksBuilder = new RangeSetBuilder<Decoration>();
+        const timeBuilder = new RangeSetBuilder<Decoration>();
 
         const { state } = view;
         const { doc } = state;
@@ -30,6 +37,17 @@ export function logbookViewPlugin(
 
             // If this is a valid logbook, then add widgets/styles.
             if (book) {
+                const from = book.from - 1;
+
+                // Add the time widget.
+                timeBuilder.add(
+                    from,
+                    from,
+                    Decoration.widget({
+                        widget: new TimeWidget(book, plugin, task),
+                    })
+                );
+
                 // If logbooks should be hidden, then hide this one.
                 let hide = false;
 
@@ -48,7 +66,7 @@ export function logbookViewPlugin(
                 if (hide) {
                     // TODO using a decoration here seems excessive.
                     // There must be a better datatype to use.
-                    builder.add(
+                    logbooksBuilder.add(
                         book.from - 1,
                         book.to + 1,
                         Decoration.mark({})
@@ -57,20 +75,23 @@ export function logbookViewPlugin(
             }
         }
 
-        return builder.finish();
+        return {
+            logbooks: logbooksBuilder.finish(),
+            times: timeBuilder.finish(),
+        };
     }
 
     class LogbookViewPlugin {
-        decorations: DecorationSet;
+        state: LogbookViewState;
 
         constructor(view: EditorView) {
-            this.decorations = logbooks(view);
+            this.state = logbooks(view);
         }
 
         update(update: ViewUpdate) {
             if (update.docChanged || update.viewportChanged ||
                 syntaxTree(update.startState) != syntaxTree(update.state)) {
-                this.decorations = logbooks(update.view);
+                this.state = logbooks(update.view);
             }
         }
     }
@@ -78,10 +99,15 @@ export function logbookViewPlugin(
     return ViewPlugin.fromClass(
         LogbookViewPlugin,
         {
-            provide: (field: ViewPlugin<LogbookViewPlugin>) => {
-                return EditorView.atomicRanges.of(
-                    v => v.plugin(field)?.decorations ?? Decoration.none
-                )
+            provide: (view: ViewPlugin<LogbookViewPlugin>) => {
+                return [
+                    EditorView.decorations.of(
+                        v => v.plugin(view)?.state?.times ?? Decoration.none
+                    ),
+                    EditorView.atomicRanges.of(
+                        v => v.plugin(view)?.state?.logbooks ?? Decoration.none
+                    )
+                ];
             }
         }
     );

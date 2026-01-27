@@ -120,6 +120,12 @@ export class Logbook {
         return this;
     }
 
+    removeLine(line: LogbookLine): this {
+        this.#lines = this.#lines.filter(value => value != line);
+
+        return this;
+    }
+
     eq(other: Logbook): boolean {
         return this.lines == other.lines;
     }
@@ -127,7 +133,7 @@ export class Logbook {
     getTotalDuration(calculateIncomplete: boolean = false): Moment.Duration {
         let result = this.lines.reduce(
             (total, line) => {
-                return total.add(this.#ensureLineComplete(line).duration ?? this.#moment.duration(0));
+                return total.add(this.ensureLineComplete(line).duration ?? this.#moment.duration(0));
             },
             this.#moment.duration(0)
         );
@@ -153,7 +159,7 @@ export class Logbook {
         return this.lines.find(l => l.endTime === undefined);
     }
 
-    #ensureLineComplete(line: LogbookLine): LogbookLine {
+    ensureLineComplete(line: LogbookLine): LogbookLine {
         // Clone the line.
         const result: LogbookLine = new LogbookLine(
             line.startTime,
@@ -176,7 +182,7 @@ export class Logbook {
         
         return [
             `${indent}:LOGBOOK:`,
-            ...this.lines.map(l => this.#ensureLineComplete(l).toString(indentation)),
+            ...this.lines.map(l => this.ensureLineComplete(l).toString(indentation)),
             `${indent}:END:`
         ].join("\n");
     }

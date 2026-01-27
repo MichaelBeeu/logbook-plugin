@@ -169,6 +169,7 @@ function updateLogbook(
     let outputPrefix = '';
     let outputSuffix = '';
     let newLogbook = false;
+    let forceWriteLogbook = false;
     
     if (!logbook) {
         let position = doc.length;
@@ -204,10 +205,17 @@ function updateLogbook(
     } else if (workflow.clockState === 'closed') {
         if (openClock) {
             openClock.endTime = moment();
+            if (plugin.settings.minLogLineThreshold > 0) {
+                const duration = logbook.ensureLineComplete(openClock).duration;
+                if (duration && duration.asSeconds() < plugin.settings.minLogLineThreshold) {
+                    logbook.removeLine(openClock);
+                    forceWriteLogbook = true;
+                }
+            }
         }
     }
 
-    if ((logbook?.lines?.length ?? 0) <= 0) {
+    if (!forceWriteLogbook && (logbook?.lines?.length ?? 0) <= 0) {
         return {
             changes: [],
             effects

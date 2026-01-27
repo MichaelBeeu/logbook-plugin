@@ -30,6 +30,9 @@ export interface LogbookPluginSettings {
 
 	// Should the task time widget start an interval to update the timer when active?
 	timeWidgetInterval: boolean;
+
+	// Minimum threshold for a log line to be recorded.
+	minLogLineThreshold: number;
 };
 
 export const DEFAULT_SETTINGS: LogbookPluginSettings = {
@@ -50,7 +53,55 @@ export const DEFAULT_SETTINGS: LogbookPluginSettings = {
 	timeWidgetPosition: "right",
 
 	timeWidgetInterval: true,
+
+	minLogLineThreshold: 1,
 };
+
+class NumberComponent extends ValueComponent<number> {
+	inputEl: HTMLInputElement;
+	callback: (value: number) => unknown;
+	abortController: AbortController;
+
+	constructor(containerEl: HTMLElement) {
+		super();
+		
+		this.abortController = new AbortController();
+
+		this.inputEl = containerEl.createEl('input', {
+			type: 'number',
+		});
+
+		this.inputEl.addEventListener('change', () => { this.onChanged(); });
+	}
+
+	setDisabled(disabled: boolean): this {
+		this.inputEl.disabled = disabled;
+		return this;
+	}
+
+	getValue(): number {
+		return parseInt(this.inputEl.value);
+	}
+
+	setValue(value: number): this {
+		this.inputEl.value = value.toString();
+		return this;
+	}
+
+	setPlaceholder(placeholder: string): this {
+		this.inputEl.placeholder = placeholder;
+		return this;
+	}
+
+	onChanged(): void {
+		this.callback(this.getValue());
+	}
+
+	onChange(callback: (value: number) => unknown): this {
+		this.callback = callback;
+		return this;
+	}
+}
 
 export class LogbookSettingTab extends PluginSettingTab {
 	plugin: LogbookPlugin;
@@ -114,6 +165,19 @@ export class LogbookSettingTab extends PluginSettingTab {
 					.setName('Hide logbooks in reading mode')
 					.setDesc(`Hide logbooks in reading mode. This will also affect page previews.`)
 					.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'hideLogbooksInReadMode')) }
+			)
+			.addSetting(
+				setting => { setting
+					.setName('Minimum logline threshold')
+					.setDesc(`The minimum length of time, in seconds, necessary for a log line to be recorded.
+						Use '0' to record all lines. Lines with a duration less than this will be discarded when
+						changing task state.`)
+					.addComponent<NumberComponent>(
+						el => {
+							const value = new NumberComponent(el);
+							return this.#configureBasicSetting(value, this.plugin.settings, 'minLogLineThreshold');
+						}
+					) }
 			);
 
 		new SettingGroup(containerEl)

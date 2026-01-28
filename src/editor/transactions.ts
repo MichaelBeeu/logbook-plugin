@@ -169,7 +169,6 @@ function updateLogbook(
     let outputPrefix = '';
     let outputSuffix = '';
     let newLogbook = false;
-    let forceWriteLogbook = false;
     
     if (!logbook) {
         let position = doc.length;
@@ -209,17 +208,33 @@ function updateLogbook(
                 const duration = logbook.ensureLineComplete(openClock).duration;
                 if (duration && duration.asSeconds() < plugin.settings.minLogLineThreshold) {
                     logbook.removeLine(openClock);
-                    forceWriteLogbook = true;
                 }
             }
         }
     }
 
-    if (!forceWriteLogbook && (logbook?.lines?.length ?? 0) <= 0) {
-        return {
-            changes: [],
-            effects
-        };
+    // Only insert the book if it has lines within it.
+    if ((logbook?.lines?.length ?? 0) <= 0) {
+        if (newLogbook) {
+            // Do not insert the logbook.
+            return {
+                changes: [],
+                effects
+            };
+        } else {
+            // Remove the empty logbook.
+            return {
+                changes: [
+                    {
+                        // Remove newline too.
+                        from: logbook.from - 1,
+                        to: logbook.to,
+                        insert: "",
+                    }
+                ],
+                effects
+            };
+        }
     }
 
     const newBlock = outputPrefix + logbook.toString(indentation) + outputSuffix;

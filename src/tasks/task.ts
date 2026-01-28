@@ -95,8 +95,7 @@ export class TaskParser
 
     getWorkflowRegex(flags: string = 'gd'): RegExp {
         let states = this.getWorkflowStates().join('|');
-        // eslint-disable-next-line no-useless-escape
-        const r = `^(?<offset>[ \\\t]*)(?<list>- )(?:(\\\[(?<checkbox>.)\\\] )?)?(?<state>${states})?\\\s`;
+        const r = `^(?<offset>[ \\t]*)(?<list>- )(?:(\\[(?<checkbox>.)\\] )?)?(?<state>(${states})\\b)?`;
 
         return new RegExp(r, flags);
     }

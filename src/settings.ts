@@ -3,6 +3,10 @@ import LogbookPlugin from "./main";
 
 export type TimeWidgetPosition = "inline"|"right";
 
+const IndentTypes = ['tabs', 'spaces'] as const;
+type IndentTypeTuple = typeof IndentTypes;
+export type IndentType = IndentTypeTuple[number];
+
 export interface LogbookIconSetting {
 	paused: string;
 	open: string;
@@ -18,6 +22,8 @@ export interface LogbookPluginSettings {
 	
 	// Should logbooks match the preceding line's indentation?
 	matchIdentation: boolean;
+
+	indentType: IndentType;
 	
 	// Should logbooks appear collapsed?
 	collapseLogbooks: boolean;
@@ -45,6 +51,8 @@ export const DEFAULT_SETTINGS: LogbookPluginSettings = {
 	},
 	
 	matchIdentation: true,
+	
+	indentType: 'tabs',
 	
 	collapseLogbooks: true,
 	
@@ -153,6 +161,22 @@ export class LogbookSettingTab extends PluginSettingTab {
 						.setDesc(`Match indentation of the preceding task element when writing a logbook.
 							Enable to make nesting of lists look more natural.`)
 						.addToggle(value => this.#configureBasicSetting(value, this.plugin.settings, 'matchIdentation')) }
+			)
+			.addSetting(
+				setting => { setting
+						.setName('Indentation type')
+						.setDesc(`Indent logbooks with tabs or groups of four spaces.`)
+						.addDropdown(
+							value => {
+								value.addOptions(
+									Object.fromEntries(
+										// Create options list. Capitalize first letter of option.
+										IndentTypes.map((k, i) => [k, k.charAt(0).toUpperCase() + k.slice(1)])
+									)
+								)
+								return this.#configureBasicSetting(value, this.plugin.settings, 'indentType');
+							}
+						) }
 			)
 			.addSetting(
 				setting => { setting

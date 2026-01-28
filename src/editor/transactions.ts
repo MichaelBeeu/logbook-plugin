@@ -237,7 +237,8 @@ function updateLogbook(
         }
     }
 
-    const newBlock = outputPrefix + logbook.toString(indentation) + outputSuffix;
+    const indentChar = plugin.settings.indentType == 'tabs' ? "\t" : "    ";
+    const newBlock = outputPrefix + logbook.toString(indentation, indentChar) + outputSuffix;
 
     return {
         changes: [

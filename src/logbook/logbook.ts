@@ -63,7 +63,7 @@ export class LogbookLine {
         return this.#to;
     }
 
-    toString(indentation?: number): string {
+    toString(indentation?: number, indentChar: string = "\t"): string {
         let secondHalf = '';
         if (this.#endTime !== undefined) {
             const duration = formatLogbookDuration(this.duration);
@@ -71,7 +71,7 @@ export class LogbookLine {
             secondHalf = `--[${this.#endTime.format('YYYY-MM-DD ddd HH:mm:ss')}] => ${duration}`;
         }
         
-        const indent = "\t".repeat(indentation ?? 0);
+        const indent = indentChar.repeat(indentation ?? 0);
 
         return `${indent}CLOCK: [${this.#startTime.format('YYYY-MM-DD ddd HH:mm:ss')}]${secondHalf}`;
     }
@@ -176,13 +176,13 @@ export class Logbook {
         return result;
     }
 
-    toString(indentation?: number): string {
+    toString(indentation?: number, indentChar: string = "\t"): string {
         indentation = (indentation ?? 0) + 1;
-        const indent = "\t".repeat(indentation);
+        const indent = indentChar.repeat(indentation);
         
         return [
             `${indent}:LOGBOOK:`,
-            ...this.lines.map(l => this.ensureLineComplete(l).toString(indentation)),
+            ...this.lines.map(l => this.ensureLineComplete(l).toString(indentation, indentChar)),
             `${indent}:END:`
         ].join("\n");
     }

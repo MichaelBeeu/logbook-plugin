@@ -5,7 +5,7 @@ import LogbookParser from 'logbook/logbook_parser';
 import { Logbooks, type LogbookTest } from 'test/data';
 import { Logbook } from './logbook';
 
-describe('test parser', () => {
+describe('test logbook parser', () => {
 
     let parser: LogbookParser|null = null;
 

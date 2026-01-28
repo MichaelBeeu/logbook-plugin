@@ -44,6 +44,9 @@ describe('test task parser', () => {
 
 - bar no state
 A line that should never be a task.
+\`\`\`
+- [ ] TODO This should not be a task, since it's in a codeblock.
+\`\`\`
 `;
         const statuses = parser?.getAllWorkflowStatuses(document);
 
@@ -51,12 +54,13 @@ A line that should never be a task.
     });
 
     test('get correct workflow offset', () => {
-        const document=`01234567890
+        const document=`01234
+567890
 - [ ] TODO adsf`
         
         const status = parser?.getAllWorkflowStatuses(document);
 
-        expect(status?.[0]?.from).toBe(12);
+        expect(status?.[0]?.from).toBe(13);
     });
 
     test('get single workflow status', () => {

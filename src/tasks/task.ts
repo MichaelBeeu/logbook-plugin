@@ -114,15 +114,23 @@ export class TaskParser
     {
         let result: WorkflowStatus[] = [];
 
-        const regex = this.getWorkflowRegex('gdm');
+        const lines = document.split('\n');
+        let inCodeblock = false;
+        let pos = offset;
 
-        const matches = document.matchAll(regex);
+        for (const line of lines) {
+            // Look for start/end of a codeblock.
+            if (line.search('```') !== -1) {
+                inCodeblock = !inCodeblock;
+            } else if (!inCodeblock) {
+                const status = this.getWorkflowStatus(line, pos)
 
-        for (const match of matches) {
-            const status = this.getWorkflowStatus(match[0], offset + match.index);
-            if (status) {
-                result.push(status);
+                if (status) {
+                    result.push(status);
+                }
             }
+
+            pos += line.length + 1;
         }
 
         return result;

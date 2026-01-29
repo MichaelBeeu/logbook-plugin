@@ -1,14 +1,29 @@
 import { foldedRanges, syntaxTree } from "@codemirror/language";
-import { RangeSetBuilder } from "@codemirror/state";
+import { RangeSet, RangeSetBuilder, RangeValue } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { LogbookPluginInterface } from "main";
 import { TextParseAdapter } from "./parse_adapter";
 import LogbookParser from "./logbook_parser";
 import { moment, Plugin } from "obsidian";
 import TimeWidget from "widgets/time_widget";
+import { Logbook } from "./logbook";
+
+class LogbookRange extends RangeValue {
+    #logbook: Logbook;
+
+    constructor(logbook: Logbook) {
+        super();
+
+        this.#logbook = logbook;
+    }
+
+    eq(other: LogbookRange): boolean {
+        return this.#logbook == other.#logbook;
+    }
+};
 
 interface LogbookViewState {
-    logbooks: DecorationSet,
+    logbooks: RangeSet<LogbookRange>,
     times: DecorationSet,
 };
 
@@ -16,7 +31,7 @@ export function logbookViewPlugin(
     plugin: LogbookPluginInterface&Plugin
 ) {
     function logbooks(view: EditorView): LogbookViewState {
-        const logbooksBuilder = new RangeSetBuilder<Decoration>();
+        const logbooksBuilder = new RangeSetBuilder<LogbookRange>();
         const timeBuilder = new RangeSetBuilder<Decoration>();
 
         const { state } = view;
@@ -69,7 +84,7 @@ export function logbookViewPlugin(
                     logbooksBuilder.add(
                         book.from - 1,
                         book.to + 1,
-                        Decoration.mark({})
+                        new LogbookRange(book)
                     );
                 }
             }

@@ -21,7 +21,7 @@ export interface LogbookPluginInterface {
 
 	addLogbookFile(file: TFile): void;
 	closeAllLogbookFiles(): Promise<void>;
-	cycleTasks(editor: EditorView, start: number, end: number): ChangeSpec[];
+	cycleTasks(editor: EditorView, start: number, end: number, incomplete: boolean): ChangeSpec[];
 	loadSettings(): Promise<void>;
 	saveSettings(): Promise<void>;
 };
@@ -156,7 +156,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 		await this.saveData(this.settings);
 	}
 
-	cycleTasks(editor: EditorView, start: number, end: number): ChangeSpec[] {
+	cycleTasks(editor: EditorView, start: number, end: number, incomplete: boolean = false): ChangeSpec[] {
 		let changes: ChangeSpec[] = [];
 
 		const { state: { doc } } = editor;
@@ -174,7 +174,7 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 
 			if (status) {
 				// Compute the next state.
-				const nextState = this.taskParser.proceedWorkflow(status.currentState);
+				const nextState = this.taskParser.proceedWorkflow(status.currentState, incomplete);
 				// When adding a state to an existing line we must ensure there is a space added
 				// between the state name and the existing text.
 				const stateSuffix = (status.currentState) ? '' : ' ';

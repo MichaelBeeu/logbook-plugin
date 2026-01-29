@@ -72,7 +72,16 @@ A line that should never be a task.
     });
 
     test('can increment a task', () => {
-        let state = parser?.proceedWorkflow('TODO');
+        let state = parser?.proceedWorkflow('TODO', true);
+        expect(state?.name).toBe('DOING');
+
+        state = parser?.proceedWorkflow('DOING', true);
+        expect(state?.name).toBe('TODO');
+
+        state = parser?.proceedWorkflow('DONE', true);
+        expect(state?.name).toBe('TODO');
+
+        state = parser?.proceedWorkflow('TODO');
         expect(state?.name).toBe('DOING');
 
         state = parser?.proceedWorkflow('DOING');

@@ -215,7 +215,7 @@ export class TaskParser
         return null;
     }
 
-    proceedWorkflow(currentState?: string): WorkflowResult|null {
+    proceedWorkflow(currentState?: string, incomplete: boolean = false): WorkflowResult|null {
         if (!currentState) {
             const name = Object.keys(this.#taskWorkflow)[0];
 
@@ -233,15 +233,25 @@ export class TaskParser
             return null;
         }
 
-        const state =this. #taskWorkflow[currentState];
-        const next = state?.next;
-        if (!next || !(next in this.#taskWorkflow)) {
-            return null;
+        let next = this.#taskWorkflow[currentState]?.next;
+        let state: WorkflowState|undefined = next ? this.#taskWorkflow[next] : undefined;
+
+        // Ensure we don't get stuck in an infinite loop due to an invalid Workflow.
+        let timeout = 10;
+
+        while (timeout > 0 && (!incomplete || state?.checkbox != ' ') && next && next in this.#taskWorkflow) {
+            state = this.#taskWorkflow[next];
+            next = state?.next;
+            timeout --;
         }
 
-        return {
-            name: next,
-            state: this.#taskWorkflow[next]!,
-        };
+        if (state) {
+            return {
+                name: state?.name,
+                state: state,
+            };
+        }
+
+        return null;
     }
 }

@@ -18,7 +18,7 @@ export function toggleClock(
 
             changes = [
                 ...changes,
-                ...plugin.cycleTasks(editorView, selectionFrom, selectionTo)
+                ...plugin.cycleTasks(editorView, selectionFrom, selectionTo, false)
             ];
         }
 

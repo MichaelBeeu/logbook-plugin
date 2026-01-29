@@ -67,7 +67,7 @@ export function taskViewPlugin(
                         const pos = view.posAtDOM(target);
                         const line = doc.lineAt(pos);
 
-                        const changes = plugin.cycleTasks(view, line.number, line.number);
+                        const changes = plugin.cycleTasks(view, line.number, line.number, true);
                         if (changes.length > 0) {
                             view.dispatch({
                                 changes

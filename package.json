@@ -1,6 +1,6 @@
 {
   "name": "logbook-plugin",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "A todo-list and time tracking plugin for Obsidian.",
   "main": "main.js",
   "type": "module",

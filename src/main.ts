@@ -56,17 +56,19 @@ export default class LogbookPlugin extends Plugin implements LogbookPluginInterf
 			editorCallback: closeAllOpenClocks(this),
 		});
 
-		this.app.workspace.on('quit', (tasks: Tasks) => {
-			if (this.settings.closeOpenLogbooksOnExit) {
-				console.warn("Attempting to close open logbooks!");
+		this.registerEvent(
+			this.app.workspace.on('quit', (tasks: Tasks) => {
+				if (this.settings.closeOpenLogbooksOnExit) {
+					console.warn("Attempting to close open logbooks!");
 
-				tasks.add(
-					async (): Promise<void> => {
-						return this.closeAllLogbookFiles();
-					}
-				);
-			}
-		});
+					tasks.add(
+						async (): Promise<void> => {
+							return this.closeAllLogbookFiles();
+						}
+					);
+				}
+			})
+		);
 
 		this.registerMarkdownPostProcessor(markdownPostProcessor(this));
 

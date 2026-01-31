@@ -26,7 +26,7 @@ export function taskNewlineFilter(
 
             // Track new changes
             let changes: ChangeSpec[] = [];
-            let selection: EditorSelection|{anchor: number; head?: number}|undefined = transaction.selection;
+            let selection: EditorSelection|undefined = transaction.selection;
 
             // Get the document.
             const doc = transaction.startState.doc;
@@ -82,10 +82,12 @@ export function taskNewlineFilter(
                                 });
                                 
                                 // Move selection.
-                                if (selection === undefined) {
-                                    selection = {
-                                        anchor: logbook.to + newInsert.length + offset,
-                                    };
+                                if (selection === undefined
+                                    || (selection.main.from === selection.main.to
+                                    && selection.main.to === (toA + 1))) {
+                                    selection = EditorSelection.create(
+                                        [EditorSelection.cursor(logbook.to + newInsert.length + offset)]
+                                    );
                                 }
 
                                 return;

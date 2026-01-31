@@ -266,9 +266,9 @@ export class LogbookSettingTab extends PluginSettingTab {
 			)
 			.addSetting(
 				setting => { setting
-					.setName('Filtew transactions that add newlines')
+					.setName('Filter transactions that add newlines')
 					.setDesc(`Filter transactions that occur on a task line for newlines.
-						If a newline is detected content after the newline will be placed
+						If a newline is detected, content after the newline will be placed
 						after the proceeding logbook.`)
 					.addToggle(cb => this.#configureBasicSetting(cb, this.plugin.settings, 'filterNewlines'))
 				}

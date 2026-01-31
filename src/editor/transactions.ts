@@ -1,4 +1,4 @@
-import { ChangeSet, ChangeSpec, EditorState, Extension, StateEffect, Text, Transaction, TransactionSpec } from "@codemirror/state";
+import { ChangeSet, ChangeSpec, EditorSelection, EditorState, Extension, StateEffect, Text, Transaction, TransactionSpec } from "@codemirror/state";
 import { moment } from "obsidian";
 import { Logbook, LogbookLine } from "logbook/logbook";
 import LogbookParser from "logbook/logbook_parser";
@@ -13,6 +13,106 @@ interface LogbookUpdateResult {
 };
 
 export const createLogbook = StateEffect.define<{number: number}>();
+
+export function taskNewlineFilter(
+    plugin: LogbookPluginInterface
+): Extension {
+    return EditorState.transactionFilter.of(
+        function(transaction: Transaction): TransactionSpec|readonly TransactionSpec[]
+        {
+            if (!plugin.settings.filterNewlines) {
+                return transaction;
+            }
+
+            // Track new changes
+            let changes: ChangeSpec[] = [];
+            let selection: EditorSelection|{anchor: number; head?: number}|undefined = transaction.selection;
+
+            // Get the document.
+            const doc = transaction.startState.doc;
+
+            transaction.changes.iterChanges(
+                (fromA: number, toA: number, fromB: number, toB: number, inserted: Text): void => {
+                    // Get the line at this position.
+                    const line = doc.lineAt(fromA);
+
+                    // Only act if the change includes inserting a newline, and occurs at the end of the line.
+                    if (inserted.lines > 1 && toA == line.to) {
+                        // Get the line as a string.
+                        const { text } = line;
+
+                        // Get current state.
+                        const workflow = plugin.taskParser.getWorkflowStatus(text, line.from);
+
+                        if (workflow !== null) {
+                            // The logbook should start directly below the current line.
+                            const logbookFrom = line.number + 1;
+
+                            const logbookParser = new LogbookParser(moment);
+
+                            // Parse the logbook, or create a new one.
+                            const parseAdapter = new TextParseAdapter(doc);
+                            const logbook = logbookParser.parse(parseAdapter, logbookFrom);
+                            
+                            if (logbook) {
+                                let insertedLines = inserted.toJSON();
+                                let offset = 0;
+                                
+                                // If the first line has text, then insert it at the original location.
+                                if (insertedLines[0] !== '') {
+                                    const insert = insertedLines.shift();
+                                    offset = (insert?.length ?? 0) - (toA - fromA);
+
+                                    changes.push({
+                                        from: fromA,
+                                        to: toA,
+                                        insert,
+                                    });
+                                    
+                                    // Replace with a newline at the new location.
+                                    insertedLines.unshift('');
+                                }
+                                
+                                // Insert text at new location (after logbook)
+                                const newInsert = insertedLines.join("\n");
+                                changes.push({
+                                    from: logbook.to,
+                                    to: logbook.to,
+                                    insert: insertedLines.join("\n"),
+                                });
+                                
+                                // Move selection.
+                                if (selection === undefined) {
+                                    selection = {
+                                        anchor: logbook.to + newInsert.length + offset,
+                                    };
+                                }
+
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // Add change without modification.
+                    changes.push({
+                        from: fromA,
+                        to: toA,
+                        insert: inserted
+                    });
+                }
+            );
+            
+            // Return new transaction.
+            const result: TransactionSpec = {
+                changes,
+                selection: selection,
+                effects: transaction.effects,
+            };
+            
+            return result;
+        }
+    );
+};
 
 export function logbookTransactionFilter(
     plugin: LogbookPluginInterface

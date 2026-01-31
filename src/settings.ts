@@ -39,6 +39,9 @@ export interface LogbookPluginSettings {
 
 	// Minimum threshold for a log line to be recorded.
 	minLogLineThreshold: number;
+	
+	// Filter transactions that add newlines.
+	filterNewlines: boolean;
 };
 
 export const DEFAULT_SETTINGS: LogbookPluginSettings = {
@@ -63,6 +66,8 @@ export const DEFAULT_SETTINGS: LogbookPluginSettings = {
 	timeWidgetInterval: true,
 
 	minLogLineThreshold: 1,
+	
+	filterNewlines: true,
 };
 
 class NumberComponent extends ValueComponent<number> {
@@ -258,6 +263,15 @@ export class LogbookSettingTab extends PluginSettingTab {
 						Enabling this may cause data-loss with no undo-history if the exit handler parses documents incorrectly.
 						This may also interfere with other plugins' exit handlers. Enable at your own risk.`)
 					.addToggle(cb => this.#configureBasicSetting(cb, this.plugin.settings, 'closeOpenLogbooksOnExit')) }
+			)
+			.addSetting(
+				setting => { setting
+					.setName('Filtew transactions that add newlines')
+					.setDesc(`Filter transactions that occur on a task line for newlines.
+						If a newline is detected content after the newline will be placed
+						after the proceeding logbook.`)
+					.addToggle(cb => this.#configureBasicSetting(cb, this.plugin.settings, 'filterNewlines'))
+				}
 			);
 	}
 }

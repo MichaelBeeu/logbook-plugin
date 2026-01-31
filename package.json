@@ -8,6 +8,7 @@
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "build-watch": "tsc -noEmit -skipLibCheck && node --watch-path=src --watch-path=styles.css --watch-path=manifest.json esbuild.config.mjs production",
+    "preversion": "pnpm run lint && pnpm run test",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "lint": "eslint .",
     "test": "jest"

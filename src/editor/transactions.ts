@@ -1,4 +1,4 @@
-import { ChangeSet, ChangeSpec, EditorSelection, EditorState, Extension, StateEffect, Text, Transaction, TransactionSpec } from "@codemirror/state";
+import { Annotation, AnnotationType, ChangeSet, ChangeSpec, EditorSelection, EditorState, Extension, StateEffect, Text, Transaction, TransactionSpec } from "@codemirror/state";
 import { moment } from "obsidian";
 import { Logbook, LogbookLine } from "logbook/logbook";
 import LogbookParser from "logbook/logbook_parser";
@@ -14,13 +14,32 @@ interface LogbookUpdateResult {
 
 export const createLogbook = StateEffect.define<{number: number}>();
 
+function getAnnotations(transaction: Transaction, types: readonly AnnotationType<unknown>[]): Annotation<unknown>[] {
+    return types.reduce(
+        (annotations, type) => {
+            // Get the value, and ensure the annotation exists.
+            const value = transaction.annotation(type);
+            if (value) {
+                // Add to list.
+                return [
+                    ...annotations,
+                    type.of(value),
+                ];
+            }
+            
+            return [...annotations];
+        }, []
+    );
+}
+
+
 export function taskNewlineFilter(
     plugin: LogbookPluginInterface
 ): Extension {
     return EditorState.transactionFilter.of(
         function(transaction: Transaction): TransactionSpec|readonly TransactionSpec[]
         {
-            if (!plugin.settings.filterNewlines) {
+            if (!plugin.settings.filterNewlines || !transaction.isUserEvent) {
                 return transaction;
             }
 
@@ -104,11 +123,21 @@ export function taskNewlineFilter(
                 }
             );
             
+            let annotations: Annotation<unknown>[] = getAnnotations(
+                transaction,
+                [
+                    Transaction.userEvent,
+                    Transaction.addToHistory,
+                    Transaction.remote,
+                    Transaction.time
+                ]);
+            
             // Return new transaction.
             const result: TransactionSpec = {
                 changes,
                 selection: selection,
                 effects: transaction.effects,
+                annotations,
             };
             
             return result;

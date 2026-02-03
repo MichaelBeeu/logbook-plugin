@@ -46,6 +46,8 @@ export function taskNewlineFilter(
             // Track new changes
             let changes: ChangeSpec[] = [];
             let selection: EditorSelection|undefined = transaction.selection;
+            // Track if the transaction should be replaced, or not.
+            let shouldReplace = false;
 
             // Get the document.
             const doc = transaction.startState.doc;
@@ -69,7 +71,7 @@ export function taskNewlineFilter(
 
                             const logbookParser = new LogbookParser(moment);
 
-                            // Parse the logbook, or create a new one.
+                            // Parse the logbook
                             const parseAdapter = new TextParseAdapter(doc);
                             const logbook = logbookParser.parse(parseAdapter, logbookFrom);
                             
@@ -108,6 +110,9 @@ export function taskNewlineFilter(
                                         [EditorSelection.cursor(logbook.to + newInsert.length + offset)]
                                     );
                                 }
+                                
+                                // A change to the transaction is required.
+                                shouldReplace = true;
 
                                 return;
                             }
@@ -123,24 +128,30 @@ export function taskNewlineFilter(
                 }
             );
             
-            let annotations: Annotation<unknown>[] = getAnnotations(
-                transaction,
-                [
-                    Transaction.userEvent,
-                    Transaction.addToHistory,
-                    Transaction.remote,
-                    Transaction.time
-                ]);
+            // Only replace the transaction if necessary,
+            // otherwise fallback to the original transaction.
+            if (shouldReplace) {
+                let annotations: Annotation<unknown>[] = getAnnotations(
+                    transaction,
+                    [
+                        Transaction.userEvent,
+                        Transaction.addToHistory,
+                        Transaction.remote,
+                        Transaction.time
+                    ]);
+                
+                // Return new transaction.
+                const result: TransactionSpec = {
+                    changes,
+                    selection: selection,
+                    effects: transaction.effects,
+                    annotations,
+                };
+                
+                return result;
+            }
             
-            // Return new transaction.
-            const result: TransactionSpec = {
-                changes,
-                selection: selection,
-                effects: transaction.effects,
-                annotations,
-            };
-            
-            return result;
+            return transaction;
         }
     );
 };
